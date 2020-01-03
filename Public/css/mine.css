@@ -1,0 +1,66 @@
+body{
+    font-size: 14px;
+}
+a{ text-decoration:none; }
+.list_box{
+	border:1px solid #ccc;	
+}
+.header{
+	background:url(../img/menu_bg.gif) repeat-x left center;
+	height:30px;
+	line-height:30px;
+	padding-left:10px;
+	padding-right:10px;	
+	margin-bottom:10px;
+}
+.header .one{
+	float:left;	
+}
+.header .two{
+	float:right;	
+}
+.main{
+	border:1px solid #09F;
+	background:#FFC;
+	height:50px;
+	line-height:50px;
+	padding-left:20px;	
+	margin-bottom:10px;
+}
+.bottom{
+	padding:10px;	
+}
+.table_1{
+    width:100%;
+}
+
+.character{
+	background:url(../img/table_bg.png) repeat-x left center;	
+	height:30px;
+}
+.character td{
+	text-align:center;
+}
+#product1 td{
+	text-align:center;
+	height:70px;
+}
+
+.table_2{
+	width:100%;	
+}
+
+.table_2 tr td{
+	height:30px;
+	padding:10px;	
+}
+.table_3{
+	width:50%;	
+}
+.table_3 td{
+	height:30px;
+	padding:10px;	
+}
+.table_3 .left_td{
+	text-align:center	
+}

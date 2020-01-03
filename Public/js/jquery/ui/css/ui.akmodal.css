@@ -1,0 +1,7 @@
+div#ak_modal_div{padding-top:0px;border:3px solid #999;background-color:#FFF;position: absolute;z-index:1000;display:none;position: absolute;}
+	div#ak_content{padding:0px;margin:0px;border:none;}
+	div#ak_modal_title{cursor:default;background:#FFF;color:#5E5E5E;display:block;padding:2px 1px;margin:0px;font:14px verdana;height:20px;text-align:center;border-bottom:1px solid #5E5E5E;}
+		a#ak_close{cursor:pointer;width:19px;height:13px;background:url(close.gif) no-repeat;display:block;}
+			a#ak_close:hover{background:url(close_hover.gif) no-repeat;}	
+		div#ak_modal_title.move {cursor:move;}			
+div#ak_loadding {text-align:center;margin:0px auto;background:url(loading.gif) no-repeat;width:32px;height:32px;}
