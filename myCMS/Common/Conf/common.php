@@ -20,6 +20,7 @@ return array(
 	'IMG_PROJECT'			=> 'project',// 项目表	
 	'IMG_TYPE'				=> 'type',// 类型表	
 	'IMG_USERS'				=> 'users',// 用户表
+	'IMG_OPERATIONINFO'		=> 'operationinfo',// 用户操作记录表
 	/* 接口状态码 */
 	'SUCCESS'				=> 200,// 成功	
 	'FAIL'					=> -4000,// 失败	

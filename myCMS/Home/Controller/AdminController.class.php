@@ -519,7 +519,7 @@ class AdminController extends ControllerController {
 			if($rtn){
 				$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'','msg'=>'还原成功','status'=>true,],'JSON');
 			}else{
-				$this->ajaxReturn(['code'=>$this->tool->fail,'data'=>'','msg'=>'还原失败','status'=>true,],'JSON');
+				$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'','msg'=>'还原失败','status'=>true,],'JSON');
 			}
 		} else {
 			$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
@@ -540,7 +540,7 @@ class AdminController extends ControllerController {
 			if($rtn){
 				$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'','msg'=>'编辑成功','status'=>true,],'JSON');
 			}else{
-				$this->ajaxReturn(['code'=>$this->tool->fail,'data'=>'','msg'=>'编辑失败','status'=>true,],'JSON');
+				$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'','msg'=>'编辑失败','status'=>true,],'JSON');
 			}
 		}
 	}
@@ -552,7 +552,7 @@ class AdminController extends ControllerController {
 	{
 		$con=array(
 			"maxSize"	=>0,//文件大小
-			"exts"		=>array('jpg','gif','png','jpeg','psd','psb','mp4','3gp','avi','rmvb','flv','wmv','mpeg','mov','mkv','flv','f4v','m4v','rm','dat','ts','mts'),//文件类型
+			"exts"		=>array('jpg','gif','png','jpeg','psd','psb','ai','mp4','3gp','avi','rmvb','flv','wmv','mpeg','mov','mkv','flv','f4v','m4v','rm','dat','ts','mts'),//文件类型
 			"autoSub"	=>false,
 			"rootPath"	=>"./",//根目录   等于项目名下
 			"savePath"	=>"file/img/".date("Y-m-d")."/",//路径，相对于项目名下
@@ -792,6 +792,7 @@ class AdminController extends ControllerController {
 				$data['activeTypeYear'][$i][2] = $this->tool->img_article->where("typeFile = 'psd' and registerTimeImg >=".$year[$i]->start." and registerTimeImg <= ".$year[$i]->end)->count();
 				$data['activeTypeYear'][$i][3] = $this->tool->img_article->where("typeFile = 'video' and registerTimeImg >=".$year[$i]->start." and registerTimeImg <= ".$year[$i]->end)->count();
 			}
+			$data['year'] = $year;
 			
 			// 全年用户每月下载数
 			$data['temp'] = [];
@@ -841,12 +842,12 @@ class AdminController extends ControllerController {
 			if ($user) {
 				$article = $this->tool->img_article->where(['state' => 2])->select();
 				for ($e=0; $e<count($article); $e++) {
-					$deleteTime = $article['retainTime'];
+					$deleteTime = $article[$e]['retainTime'];
 					$deleteTime = $deleteTime + ($this->tool->time_day * 30);
 					$day = ($deleteTime - time()) / $this->tool->time_day;
 					if($day < 1){
-						$where['mId']=$article['mId'];
-						$adel = $this->tool->img_article->where($where)->find();
+						$where['mId'] = $article[$e]['mId'];
+						$adel = $article[$e];
 						if($adel){
 							$jsonimg=$adel['img'];
 							$dfileimg= json_decode($jsonimg,true);
@@ -892,7 +893,25 @@ class AdminController extends ControllerController {
 									}
 								}
 							}
-							$adel = $this->tool->img_article->where($where)->delete();
+							$this->tool->img_article->where($where)->delete();
+							$userInfo = $this->tool->img_users->where(['uId' => I("post.uId")])->find();
+							$userAuthGroupInfo = $this->tool->img_auth_group->where(['id' => $userInfo["permissions"]])->find();
+							$data = [
+								"uId" 						=> I("post.uId"),
+								"type" 						=> 29,
+								"time" 						=> time(),
+								"contentText"				=> "回收站文章【".$adel['title']."】保留天数已到自动删除",
+								"content_groupText"			=> $userInfo['nickname']."[".$userAuthGroupInfo['title']."]回收站文章【".$adel['title']."】保留天数已到自动删除",
+								"content_user"				=> "{}",
+								"content_auth_group"		=> "{}",
+								"content_project"			=> "{}",
+								"content_type"				=> "{}",
+								"content_classification"	=> "{}",
+								"content_group_label"		=> "{}",
+								"content_label"				=> "{}",
+								"content_article_type"		=> "{}"
+							];
+							$rn = $this->tool->img_operationinfo->add($data);
 						}
 					}
 				}
@@ -919,7 +938,7 @@ class AdminController extends ControllerController {
 				}
 				$sql=$this->tool->img_users->where(['userName' => $usersArr['userName']])->find();
 				if($sql['userName']){
-					$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'3','msg'=>'该账号已被注册','status'=>true,],'JSON');
+					$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'该账号已被注册','status'=>true,],'JSON');
 				}else{
 					$usersArr['headPortraitSrc'] = 'image/sq17.png';
 					$usersArr['password'] = md5($usersArr['password']);
@@ -935,11 +954,11 @@ class AdminController extends ControllerController {
 					if($rtn){
 						$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'','msg'=>'注册成功','status'=>true,],'JSON');
 					}else{
-						$this->ajaxReturn(['code'=>$this->tool->fail,'data'=>'5','msg'=>'注册失败','status'=>true,],'JSON');
+						$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'','msg'=>'注册失败','status'=>true,],'JSON');
 					}
 				}
 			}else{
-				$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'5','msg'=>'格式错误','status'=>true,],'JSON');
+				$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'格式错误','status'=>true,],'JSON');
 			}
 		}
 	}
@@ -1128,12 +1147,19 @@ class AdminController extends ControllerController {
 	public function exhibitionDel()
 	{
 		if(IS_POST){
-			$rtn=$this->tool->img_article->where(['mId' => I("post.mId")])->save(['state' => 2, 'retainTime' => time()]);
-			if($rtn){
-				$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'','msg'=>'删除成功','status'=>true,],'JSON');
-			}else{
-				$this->ajaxReturn(['code'=>$this->tool->fail,'data'=>'','msg'=>'删除失败','status'=>true,],'JSON');
+			$articleUserInfo = $this->tool->img_users->where(['uId' => I("post.uId")])->find();
+			$article = $this->tool->img_article->where(['mId' => I("post.mId")])->find();
+			if($article['uId'] == I("post.uId") || $articleUserInfo['permissions'] == '2'){
+				$rtn=$this->tool->img_article->where(['mId' => I("post.mId")])->save(['state' => 2, 'retainTime' => time()]);
+				if($rtn){
+					$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'','msg'=>'删除成功','status'=>true,],'JSON');
+				}else{
+					$this->ajaxReturn(['code'=>$this->tool->fail,'data'=>'','msg'=>'删除失败','status'=>true,],'JSON');
+				}
+			} else {
+				$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'权限不足，无法操作','status'=>true,],'JSON');
 			}
+			
 		} else {
 			$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
 		}
@@ -1209,7 +1235,7 @@ class AdminController extends ControllerController {
 					}
 				}
 				$rn = $this->tool->img_article->where($where)->delete();
-				if($articleArrs){
+				if($rn){
 					$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'','msg'=>'删除成功','status'=>true,],'JSON');
 				}else{
 					$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'','msg'=>'删除失败','status'=>true,],'JSON');

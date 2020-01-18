@@ -19,6 +19,7 @@ class Tool {
 	public $img_label;
 	public $img_collect;
 	public $img_information;
+	public $img_operationinfo;
 	public $src_url;
 	public $time_second;
 	public $time_minute;
@@ -47,6 +48,7 @@ class Tool {
 		$this->img_label = M(C('IMG_LABEL'));
 		$this->img_collect = M(C('IMG_COLLECT'));
 		$this->img_information = M(C('IMG_INFORMATION'));
+		$this->img_operationinfo = M(C('IMG_OPERATIONINFO'));
 		// 初始化时间值
 		$this->time_second = C('TIME_SECOND');
 		$this->time_minute = C('TIME_MINUTE');
@@ -337,6 +339,10 @@ class Tool {
 		}
 	}
 	
+	/**
+	* 计算文件大小并加入计量单位
+	* $filesize 文件大小(单位:B)
+	**/
 	function getFileSize($filesize) {
 		if($filesize >= 1073741824) {
 			$info = [
@@ -409,7 +415,59 @@ class Tool {
 		} else {
 			return ['width' => $width, 'height' => $height];
 		}
-		
 	}
-	
+	/**
+	* 循环数组获取需要的值
+	*
+	* $tableName	数据库表名称
+	* $key			比对键
+	* $keyResult	结果键
+	* $value		比对值
+	*
+	**/
+	function getDataInfo($tableName, $key, $keyResult, $value) {
+		$info = "";
+		switch($tableName) {
+			case 'IMG_USERS':
+				$infoList = $this->img_users->select();
+				break;
+			case 'IMG_AUTH_GROUP':
+				$infoList = $this->img_auth_group->select();
+				break;
+			case 'IMG_AUTH_RULE_COPY':
+				$infoList = $this->img_auth_rule_copy->select();
+				break;
+			case 'IMG_ARTICLE':
+				$infoList = $this->img_article->select();
+				break;
+			case 'IMG_PROJECT':
+				$infoList = $this->img_project->select();
+				break;
+			case 'IMG_TYPE':
+				$infoList = $this->img_type->select();
+				break;
+			case 'IMG_DETAILS':
+				$infoList = $this->img_details->select();
+				break;
+			case 'IMG_GROUP_LABEL':
+				$infoList = $this->img_group_label->select();
+				break;
+			case 'IMG_LABEL':
+				$infoList = $this->img_label->select();
+				break;
+			case 'IMG_COLLECT':
+				$infoList = $this->img_collect->select();
+				break;
+			case 'IMG_INFORMATION':
+				$infoList = $this->img_information->select();
+				break;
+			case 'IMG_OPERATIONINFO':
+				$infoList = $this->img_operationinfo->select();
+				break;
+		}
+		foreach ($infoList as $obj) {
+			if($obj[$key] == $value) $info = $obj[$keyResult];
+		}
+		return $info;
+	}
 }

@@ -89,6 +89,8 @@ return array(
 		'u/emailrepeat' 			=> 	'home/web/emailrepeat',
 		'u/send' 					=> 	'home/web/Send',
 		'u/retrievePassword' 		=> 	'home/web/retrievePassword',
+		'w/setOperationInfo' 		=> 	'home/web/setOperationInfo',
+		'w/getOperationInfo' 		=> 	'home/web/getOperationInfo',
 		/******************* 前台接口end *************************/
 	), 
 	

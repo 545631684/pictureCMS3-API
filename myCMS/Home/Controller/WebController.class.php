@@ -262,8 +262,298 @@ class WebController extends ControllerController {
 			header('Content-disposition: attachment; filename='.$downloadFileName);
 			header('Content-Length: ' . filesize($packDownloadFileName));
 			readfile($packDownloadFileName);
+			
+			if(readfile){
+				$mId = I("post.mId");
+				$froid = I("post.froid");
+				$inid = I("post.inid");
+				$userfro = $this->tool->img_users->where("uId in($froid)")->select();
+				$userin = $this->tool->img_users->where("uId in($inid)")->select();
+				$articlefind = $this->tool->img_article->where("mId =".$mId)->find();
+				if($userfro && $userin){
+					if($userfro[0]['permissions']=="2"){
+						$per="管理员";
+					}else{
+						$per="用户";
+					}
+					$sqlArr["froid"]=$froid;
+					$sqlArr["inid"]=$inid;
+					$sqlArr["information"]="hello.".$userin[0]['nickname']."，".$per."-".$userfro[0]['nickname']."(".$userfro[0]['userName'].")下载了你的文件，标题为"."--'".$articlefind['title']."'";
+					$sqlArr["created"]=time();
+					$sqlArr["state"]=1;
+					if($froid!=$inid){
+						$sql = $this->tool->img_information->add($sqlArr);
+						
+					}
+				}
+			}
+			
 		} else {
 			exit('下载失败');
 		}
 	}
+	
+	/**
+	* 记录用户操作
+	*/
+	public function setOperationInfo(){
+		if(IS_POST){
+			$data = [
+				"uId" 						=> I("post.uId"),
+				"type" 						=> I("post.type"),
+				"time" 						=> time(),
+				"contentText"				=> "",
+				"content_groupText"			=> "",
+				"content_user"				=> I("post.content_user")!=""?I("post.content_user"):"{}",
+				"content_article"			=> I("post.content_article")!=""?I("post.content_article"):"{}",
+				"content_auth_group"		=> I("post.content_auth_group")!=""?I("post.content_auth_group"):"{}",
+				"content_project"			=> I("post.content_project")!=""?I("post.content_project"):"{}",
+				"content_type"				=> I("post.content_type")!=""?I("post.content_type"):"{}",
+				"content_classification"	=> I("post.content_classification")!=""?I("post.content_classification"):"{}",
+				"content_group_label"		=> I("post.content_group_label")!=""?I("post.content_group_label"):"{}",
+				"content_label"				=> I("post.content_label")!=""?I("post.content_label"):"{}",
+				"content_article_type"		=> I("post.content_article_type")!=""?I("post.content_article_type"):"{}"
+			];
+			$userInfo = $this->tool->img_users->where(['uId' => $data["uId"]])->find();
+			$userAuthGroupInfo = $this->tool->img_auth_group->where(['id' => $userInfo["permissions"]])->find();
+			$userIfo = [];
+			switch($data['type']) {
+			  case '1':
+				$articleUserInfo = $this->tool->img_users->where(['uId' => $data["content_article"]['start']['uId']])->find();
+				$articleUserAuthGroupInfo = $this->tool->img_auth_group->where(['id' => $articleUserInfo["permissions"]])->find();
+				if($data["uId"] == $data["content_article"]['start']['uId']){
+					$data['contentText'] = "后台查看文章【".$data['content_article']['start']['title']."】";
+					$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]后台查看文章【".$data['content_article']['start']['title']."】";
+				} else{
+					$data['contentText'] = "后台查看[".$articleUserInfo['nickname']."<".$articleUserAuthGroupInfo['title'].">]发布的文章【".$data['content_article']['start']['title']."】";
+					$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]后台查看[".$articleUserInfo['nickname']."<".$articleUserAuthGroupInfo['title'].">]发布的文章【".$data['content_article']['start']['title']."】";
+				}
+				break;
+			  case '2':
+				$articleUserInfo = $this->tool->img_users->where(['uId' => $data["content_article"]['start']['uId']])->find();
+				$articleUserAuthGroupInfo = $this->tool->img_auth_group->where(['id' => $articleUserInfo["permissions"]])->find();
+				if($data["uId"] == $data["content_article"]['start']['uId']){
+					$data['contentText'] = "后台删除文章【".$data['content_article']['start']['title']."】";
+					$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]后台删除文章【".$data['content_article']['start']['title']."】";
+				} else{
+					$data['contentText'] = "后台删除[".$articleUserInfo['nickname']."<".$articleUserAuthGroupInfo['title'].">]的文章【".$data['content_article']['start']['title']."】";
+					$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]后台删除[".$articleUserInfo['nickname']."<".$articleUserAuthGroupInfo['title'].">]的文章【".$data['content_article']['start']['title']."】";
+					
+					$data2 = $data;
+					$data2['uId'] = $data["content_article"]['start']['uId'];
+					$data2['contentText'] = "你的文章【".$data['content_article']['start']['title']."】被[".$userInfo['nickname']."<".$userAuthGroupInfo['title'].">]删除";
+					$data2['content_groupText'] = $articleUserInfo['nickname']."[".$articleUserAuthGroupInfo['title']."]的文章【".$data['content_article']['start']['title']."】被[".$userInfo['nickname']."<".$userAuthGroupInfo['title'].">]删除";
+				}
+				break;
+			  case '3':
+				$data['contentText'] = "还原回收站文章【".$data['content_article']['start']['title']."】";
+				$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]还原回收站文章【".$data['content_article']['start']['title']."】";
+				break;
+			  case '4':
+				$data['contentText'] = "删除回收站文章【".$data['content_article']['start']['title']."】";
+				$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]删除回收站文章【".$data['content_article']['start']['title']."】";
+				break;
+			  case '5':
+				if($data['content_user']['start']['headPortraitSrc'] != $data['content_user']['end']['headPortraitSrc']){
+					$userIfo[0] = "头像修改";
+				}
+				if($data['content_user']['start']['nickname'] != $data['content_user']['end']['nickname']){
+					$userIfo[count($userIfo)] = "昵称：(原)".$data['content_user']['start']['nickname']."=>".$data['content_user']['end']['nickname']."(改)";
+				}
+				if($data['content_user']['start']['sex'] != $data['content_user']['end']['sex']){
+					$userIfo[count($userIfo)] = "性别：(原)".$data['content_user']['start']['sex']."=>".$data['content_user']['end']['sex']."(改)";
+				}
+				if(count($userIfo)!=0){
+					$data['contentText'] = "修改个人信息：".implode("，",$userIfo);
+					$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]修改个人信息：".implode(" ",$userIfo);
+				} else {
+					$data['contentText'] = "修改个人信息：但并没有修改任何数据";
+					$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]修改个人信息：但并没有修改任何数据";
+				}
+				break;
+			  case '6':
+				$data['contentText'] = "添加新用户【".$data['content_user']['start']['nickname']."】，权限：[".$this->tool->getDataInfo('IMG_AUTH_GROUP', 'id', 'title', $data['content_user']['start']['permissions'])."]";
+				$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."],添加新用户【".$data['content_user']['start']['nickname']."】，权限：[".$this->tool->getDataInfo('IMG_AUTH_GROUP', 'id', 'title', $data['content_user']['start']['permissions'])."]";
+				break;
+			  case '7':
+				if($data['content_user']['start']['nickname'] != $data['content_user']['end']['nickname']){
+					$userIfo[0] = "昵称：(原)".$data['content_user']['start']['nickname']."=>".$data['content_user']['end']['nickname']."(改)";
+				}
+				if($data['content_user']['end']['password'] != ""){
+					$userIfo[count($userIfo)] = "密码";
+				}
+				if($data['content_user']['start']['sex'] != $data['content_user']['end']['sex']){
+					if($data['content_user']['start']['sex']=="0" && count($data['content_user']['end']['sex']) == "1"){
+						$userIfo[count($userIfo)] = "性别：(原)女=>男(改)";
+					} else if($data['content_user']['start']['sex']=="1" && count($data['content_user']['end']['sex']) == "0"){
+						$userIfo[count($userIfo)] = "性别：(原)男=>女(改)";
+					} else if($data['content_user']['start']['sex']=="" && count($data['content_user']['end']['sex']) == "0"){
+						$userIfo[count($userIfo)] = "性别：(原)未知=>女(改)";
+					} else if($data['content_user']['start']['sex']=="" && count($data['content_user']['end']['sex']) == "1"){
+						$userIfo[count($userIfo)] = "性别：(原)未知=>男(改)";
+					}
+				}
+				if($data['content_user']['start']['permissions'] != $data['content_user']['end']['permissions']){
+					$userIfo[count($userIfo)] = "权限：(原)".$this->tool->getDataInfo('IMG_AUTH_GROUP', 'id', 'title', $data['content_user']['start']['permissions'])."=>".$this->tool->getDataInfo('IMG_AUTH_GROUP', 'id', 'title', $data['content_user']['end']['permissions'])."(改)";
+				}
+				if($data['content_user']['start']['webShow'] != $data['content_user']['end']['webShow']){
+					if($data['content_user']['start']['webShow'] == '0' && $data['content_user']['end']['webShow'] == '1'){
+						$userIfo[count($userIfo)] = "前台显示：(原)禁用=>启用(改)";
+					} else if($data['content_user']['start']['webShow'] == '1' && $data['content_user']['end']['webShow'] == '0'){
+						$userIfo[count($userIfo)] = "前台显示：(原)启用=>禁用(改)";						
+					}
+				}
+				if($data['content_user']['start']['state'] != $data['content_user']['end']['state']){
+					if($data['content_user']['start']['state'] == '0' && $data['content_user']['end']['state'] == '1'){
+						$userIfo[count($userIfo)] = "账号状态：(原)启用=>禁用(改)";
+					} else if($data['content_user']['start']['state'] == '1' && $data['content_user']['end']['state'] == '0'){
+						$userIfo[count($userIfo)] = "账号状态：(原)禁用=>启用(改)";						
+					}
+				}
+				if(count($userIfo)!=0){
+					$data['contentText'] = "修改用户【".$data['content_user']['start']['nickname']."】".implode("，",$userIfo);
+					$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]修改用户【".$data['content_user']['start']['nickname']."】".implode(" ",$userIfo);
+				} else {
+					$data['contentText'] = "修改用户【".$data['content_user']['start']['nickname']."】但并没有修改任何数据";
+					$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]修改用户【".$data['content_user']['start']['nickname']."】但并没有修改任何数据";
+				}
+				break;
+			  case '8':
+				$data['contentText'] = "还原用户【".$data['content_user']['start']['nickname']."】";
+				$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]还原用户【".$data['content_user']['start']['nickname']."】";
+				break;
+			  case '9':
+				$data['contentText'] = "添加用户组【".$data['content_auth_group']['start']['title']."】";
+				$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]添加用户组【".$data['content_auth_group']['start']['title']."】";
+				break;
+			  case '10':
+				$data['contentText'] = "修改用户组【".$data['content_auth_group']['start']['title']."】=>id：".$data['content_auth_group']['start']['id'];
+				$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]修改用户组【".$data['content_auth_group']['start']['title']."】=>id：".$data['content_auth_group']['start']['id'];
+				break;
+			  case '11':
+				$data['contentText'] = "删除用户组【".$data['content_auth_group']['start']['title']."】=>id：".$data['content_auth_group']['start']['id'];
+				$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]删除用户组【".$data['content_auth_group']['start']['title']."】=>id：".$data['content_auth_group']['start']['id'];
+				break;
+			  case '12':
+				$data['contentText'] = "添加项目【".$data['content_project']['start']['xname']."】";
+				$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]添加项目【".$data['content_project']['start']['xname']."】";
+				break;
+			  case '13':
+				$data['contentText'] = "修改项目【".$data['content_project']['start']['xname']."】=>id：".$data['content_project']['start']['pid'];
+				$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]修改项目【".$data['content_project']['start']['xname']."】=>id：".$data['content_project']['start']['pid'];
+				break;
+			  case '14':
+				$data['contentText'] = "删除项目【".$data['content_project']['start']['xname']."】=>id：".$data['content_project']['start']['pid'];
+				$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]删除项目【".$data['content_project']['start']['xname']."】=>id：".$data['content_project']['start']['pid'];
+				break;
+			  case '15':
+				$data['contentText'] = "添加类型【".$data['content_type']['start']['lname']."】=>id：".$data['content_type']['start']['tid'];
+				$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]删除类型【".$data['content_type']['start']['lname']."】=>id：".$data['content_type']['start']['tid'];
+				break;
+			  case '16':
+				$data['contentText'] = "修改类型【".$data['content_type']['start']['lname']."】=>id：".$data['content_type']['start']['tid'];
+				$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]修改类型【".$data['content_type']['start']['lname']."】=>id：".$data['content_type']['start']['tid'];
+				break;
+			  case '17':
+				$data['contentText'] = "删除类型【".$data['content_type']['start']['lname']."】=>id：".$data['content_type']['start']['tid'];
+				$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]删除类型【".$data['content_type']['start']['lname']."】=>id：".$data['content_type']['start']['tid'];
+				break;
+			  case '18':
+				$data['contentText'] = "添加分类【".$data['content_classification']['start']['dname']."】，上级类型【".$data['content_classification']['start']['typeName']."】";
+				$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]添加分类【".$data['content_classification']['start']['dname']."】，上级类型【".$data['content_classification']['start']['typeName']."】";
+				break;
+			  case '19':
+				$data['contentText'] = "修改分类【".$data['content_classification']['start']['dname']."】，上级类型【".$data['content_classification']['start']['typeName']."】=>id：".$data['content_classification']['start']['did'];
+				$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]修改分类【".$data['content_classification']['start']['dname']."】，上级类型【".$data['content_classification']['start']['typeName']."】=>id：".$data['content_classification']['start']['did'];
+				break;
+			  case '20':
+				$data['contentText'] = "删除分类【".$data['content_classification']['start']['dname']."】，上级类型【".$data['content_classification']['start']['typeName']."】=>id：".$data['content_classification']['start']['did'];
+				$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]删除分类【".$data['content_classification']['start']['dname']."】，上级类型【".$data['content_classification']['start']['typeName']."】=>id：".$data['content_classification']['start']['did'];
+				break;
+			  case '21':
+				$data['contentText'] = "添加标签组【".$data['content_group_label']['start']['name']."】";
+				$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]添加标签组【".$data['content_group_label']['start']['name']."】";
+				break;
+			  case '22':
+				$data['contentText'] = "修改标签组【".$data['content_group_label']['start']['name']."】=>id：".$data['content_group_label']['start']['gid'];
+				$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]修改标签组【".$data['content_group_label']['start']['name']."】=>id：".$data['content_group_label']['start']['gid'];
+				break;
+			  case '23':
+				$data['contentText'] = "删除标签组【".$data['content_group_label']['start']['name']."】=>id：".$data['content_group_label']['start']['gid'];
+				$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]删除标签组【".$data['content_group_label']['start']['name']."】=>id：".$data['content_group_label']['start']['gid'];
+				break;
+			  case '24':
+				$data['contentText'] = "添加标签【".$data['content_label']['start']['name']."】,标签组【".$data['content_label']['start']['pname']."】";
+				$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]添加标签【".$data['content_label']['start']['name']."】,标签组【".$data['content_label']['start']['pname']."】";
+				break;
+			  case '25':
+				$data['contentText'] = "修改标签【".$data['content_label']['start']['name']."】=>id：".$data['content_label']['start']['lid'];
+				$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]修改标签【".$data['content_label']['start']['name']."】=>id：".$data['content_label']['start']['lid'];
+				break;
+			  case '26':
+				$data['contentText'] = "删除标签【".$data['content_label']['start']['name']."】=>id：".$data['content_label']['start']['lid'];
+				$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]删除标签【".$data['content_label']['start']['name']."】=>id：".$data['content_label']['start']['lid'];
+				break;
+			  case '27':
+				$data['contentText'] = "登录后台";
+				$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]登录后台";
+				break;
+			  case '28':
+				$data['contentText'] = "注销退出";
+				$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]注销退出";
+				break;
+			  case '31':
+				$data['contentText'] = "发布文章【".$data['content_article']['start']['title']."】";
+				$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]注销退出";
+				break;
+			}
+			$data = [
+				"uId" 						=> $data['uId'],
+				"type" 						=> $data['type'],
+				"time" 						=> $data['time'],
+				"contentText"				=> $data['contentText']."。",
+				"content_groupText"			=> $data['content_groupText']."。",
+				"content_user"				=> json_encode($data['content_user']),
+				"content_article"			=> json_encode($data['content_article']),
+				"content_auth_group"		=> json_encode($data['content_auth_group']),
+				"content_project"			=> json_encode($data['content_project']),
+				"content_type"				=> json_encode($data['content_type']),
+				"content_classification"	=> json_encode($data['content_classification']),
+				"content_group_label"		=> json_encode($data['content_group_label']),
+				"content_label"				=> json_encode($data['content_label']),
+				"content_article_type"		=> json_encode($data['content_article_type'])
+			];
+			if($data['type'] == '2'){
+				$rn = $this->tool->img_operationinfo->add($data);
+				$rn2 = $this->tool->img_operationinfo->add($data2);
+				if($rn && $rn2){
+					$this->ajaxReturn(['code'=>$this->tool->success,'data'=>$rn,'msg'=>'已记录','status'=>true,],'JSON');
+				} else {
+					$this->ajaxReturn(['code'=>$this->tool->success,'data'=>$rn,'msg'=>'记录失败','status'=>true,],'JSON');
+				}
+			} else {
+				$rn = $this->tool->img_operationinfo->add($data);
+				if($rn){
+					$this->ajaxReturn(['code'=>$this->tool->success,'data'=>$rn,'msg'=>'已记录','status'=>true,],'JSON');
+				} else {
+					$this->ajaxReturn(['code'=>$this->tool->success,'data'=>$rn,'msg'=>'记录失败','status'=>true,],'JSON');
+				}
+			}
+		}
+	}
+	
+	/**
+	* 获取用户操作记录信息
+	*/
+	public function getOperationInfo(){
+		if(IS_POST){
+			if(I("post.uId")!=""){
+				$data = $this->tool->img_operationinfo->where(['uId' => I("post.uId")])->select();
+			} else {
+				$data = $this->tool->img_operationinfo->select();
+			}
+			$this->ajaxReturn(['code'=>$this->tool->success,'data'=>$data,'msg'=>'success','status'=>true,],'JSON');
+		}
+	}
+	
 }
