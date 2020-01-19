@@ -364,8 +364,8 @@ class WebController extends ControllerController {
 					$userIfo[count($userIfo)] = "性别：(原)".$data['content_user']['start']['sex']."=>".$data['content_user']['end']['sex']."(改)";
 				}
 				if(count($userIfo)!=0){
-					$data['contentText'] = "修改个人信息：".implode("，",$userIfo);
-					$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]修改个人信息：".implode(" ",$userIfo);
+					$data['contentText'] = "修改个人信息：".implode(", ",$userIfo);
+					$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]修改个人信息：".implode(", ",$userIfo);
 				} else {
 					$data['contentText'] = "修改个人信息：但并没有修改任何数据";
 					$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]修改个人信息：但并没有修改任何数据";
@@ -411,8 +411,8 @@ class WebController extends ControllerController {
 					}
 				}
 				if(count($userIfo)!=0){
-					$data['contentText'] = "修改用户【".$data['content_user']['start']['nickname']."】".implode("，",$userIfo);
-					$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]修改用户【".$data['content_user']['start']['nickname']."】".implode(" ",$userIfo);
+					$data['contentText'] = "修改用户【".$data['content_user']['start']['nickname']."】".implode(", ",$userIfo);
+					$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]修改用户【".$data['content_user']['start']['nickname']."】".implode(", ",$userIfo);
 				} else {
 					$data['contentText'] = "修改用户【".$data['content_user']['start']['nickname']."】但并没有修改任何数据";
 					$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]修改用户【".$data['content_user']['start']['nickname']."】但并没有修改任何数据";
@@ -502,9 +502,59 @@ class WebController extends ControllerController {
 				$data['contentText'] = "注销退出";
 				$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]注销退出";
 				break;
+			  case '30':
+				if($data['content_article']['start']['title'] != $data['content_article']['end']['title']){
+					$userIfo[count($userIfo)] = "标题：(原)".$data['content_article']['start']['title']."=>".$data['content_article']['end']['title']."(改)";
+				}
+				if($data['content_article']['start']['projectid'] != $data['content_article']['end']['pid']){
+					$userIfo[count($userIfo)] = "项目：(原)".$data['content_article']['start']['xname']."=>".$this->tool->getDataInfo('IMG_PROJECT', 'pid', 'xname', $data['content_article']['end']['pid'])."(改)";
+				}
+				if($data['content_article']['start']['typeid'] != $data['content_article']['end']['tid']){
+					$userIfo[count($userIfo)] = "类型：(原)".$data['content_article']['start']['lname']."=>".$this->tool->getDataInfo('IMG_TYPE', 'tid', 'lname', $data['content_article']['end']['tid'])."(改)";
+				}
+				if($data['content_article']['start']['detailsid'] != $data['content_article']['end']['did']){
+					$userIfo[count($userIfo)] = "分类：(原)".$data['content_article']['start']['dname']."=>".$this->tool->getDataInfo('IMG_DETAILS', 'did', 'dname', $data['content_article']['end']['did'])."(改)";
+				}
+				if($data['content_article']['start']['describe'] != $data['content_article']['end']['describe']){
+					$userIfo[count($userIfo)] = "描述：(原)".$data['content_article']['start']['describe']."=>".$data['content_article']['end']['describe']."(改)";
+				}
+				if($data['content_article']['start']['keyword'] != $data['content_article']['end']['keyword']){
+					$userIfo[count($userIfo)] = "关键词：(原)".$data['content_article']['start']['keyword']."=>".$data['content_article']['end']['keyword']."(改)";
+				}
+				if($data['content_article']['start']['typeFile'] == 'img'){
+					if(json_encode($data['content_article']['start']['img']) != json_encode($data['content_article']['end']['img'])){
+						$userIfo[count($userIfo)] = "上传文件img内容改动";
+					}
+				}
+				if($data['content_article']['start']['typeFile'] == 'psd'){
+					if(json_encode($data['content_article']['start']['psd']) != json_encode($data['content_article']['end']['psd'])){
+						$userIfo[count($userIfo)] = "上传文件psd内容改动";
+					}
+				}
+				if($data['content_article']['start']['typeFile'] == 'video'){
+					if(json_encode($data['content_article']['start']['img']) != json_encode($data['content_article']['end']['img'])){
+						$userIfo[count($userIfo)] = "上传文件img补充内容改动";
+					}
+					if(json_encode($data['content_article']['start']['video']) != json_encode($data['content_article']['end']['video'])){
+						$userIfo[count($userIfo)] = "上传文件video内容改动";
+					}
+				}
+				if($data['uId'] == $data['content_article']['start']['uId']){
+					$data['contentText'] = "修改文章【".$data['content_article']['start']['title']."】".implode(", ",$userIfo);
+					$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]发布文章【".$data['content_article']['start']['title']."】".implode(", ",$userIfo);
+				} else {
+					$data['contentText'] = "你修改了[".$this->tool->getDataInfo('IMG_USERS', 'uId', 'nickname', $data['content_article']['end']['uId'])."<".$this->tool->getDataInfo('IMG_AUTH_GROUP', 'id', 'title', $this->tool->getDataInfo('IMG_USERS', 'uId', 'permissions', $data['content_article']['end']['uId'])).">]发布的文章【".$data['content_article']['start']['title']."】".implode(", ",$userIfo);
+					$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]修改了[".$this->tool->getDataInfo('IMG_USERS', 'uId', 'nickname', $data['content_article']['end']['uId'])."<".$this->tool->getDataInfo('IMG_AUTH_GROUP', 'id', 'title', $this->tool->getDataInfo('IMG_USERS', 'uId', 'nickname', $data['content_article']['end']['uId'])).">]发布的文章【".$data['content_article']['start']['title']."】".implode(", ",$userIfo);
+					
+					$data2 = $data;
+					$data2['uId'] = $data["content_article"]['end']['uId'];
+					$data2['contentText'] = "你的文章【".$data['content_article']['start']['title']."】被[".$userInfo['nickname']."<".$userAuthGroupInfo['title'].">]修改，内容：".implode(", ",$userIfo);
+					$data2['content_groupText'] = $this->tool->getDataInfo('IMG_USERS', 'uId', 'nickname', $data['content_article']['end']['uId'])."<".$this->tool->getDataInfo('IMG_AUTH_GROUP', 'id', 'title', $this->tool->getDataInfo('IMG_USERS', 'uId', 'permissions', $data['content_article']['end']['uId']))."的文章被[".$articleUserInfo['nickname']."<".$articleUserAuthGroupInfo['title'].">]修改，内容：".implode(", ",$userIfo);
+				}
+				break;
 			  case '31':
-				$data['contentText'] = "发布文章【".$data['content_article']['start']['title']."】";
-				$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]注销退出";
+				$data['contentText'] = "修改文章【".$data['content_article']['start']['title']."】";
+				$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]发布文章【".$data['content_article']['start']['title']."】";
 				break;
 			}
 			$data = [
@@ -523,13 +573,13 @@ class WebController extends ControllerController {
 				"content_label"				=> json_encode($data['content_label']),
 				"content_article_type"		=> json_encode($data['content_article_type'])
 			];
-			if($data['type'] == '2'){
+			if($data['type'] == '2' || $data['type'] == '30'){
 				$rn = $this->tool->img_operationinfo->add($data);
 				$rn2 = $this->tool->img_operationinfo->add($data2);
 				if($rn && $rn2){
 					$this->ajaxReturn(['code'=>$this->tool->success,'data'=>$rn,'msg'=>'已记录','status'=>true,],'JSON');
 				} else {
-					$this->ajaxReturn(['code'=>$this->tool->success,'data'=>$rn,'msg'=>'记录失败','status'=>true,],'JSON');
+					$this->ajaxReturn(['code'=>$this->tool->success,'data'=>"",'msg'=>'记录失败','status'=>true,],'JSON');
 				}
 			} else {
 				$rn = $this->tool->img_operationinfo->add($data);
@@ -548,7 +598,7 @@ class WebController extends ControllerController {
 	public function getOperationInfo(){
 		if(IS_POST){
 			if(I("post.uId")!=""){
-				$data = $this->tool->img_operationinfo->where(['uId' => I("post.uId")])->select();
+				$data = $this->tool->img_operationinfo->where(['uId' => I("post.uId")])->limit(50)->select();
 			} else {
 				$data = $this->tool->img_operationinfo->select();
 			}

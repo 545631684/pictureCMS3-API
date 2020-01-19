@@ -1406,7 +1406,7 @@ class AdminController extends ControllerController {
 	{
 		if(IS_POST){
 			if(I('post.uId') == '') $this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
-			$data['article'] = $this->tool->img_article->where(['state' => 1,'uId' => I('post.uId')])->order('registerTimeImg DESC')->limit(12)->select();
+			$data['article'] = $this->tool->img_article->where(['state' => 1,'uId' => I('post.uId')])->order('registerTimeImg DESC')->limit(50)->select();
 			$data['downloadNum'] = $this->tool->img_information->where(['inid' => I('post.uId')])->count();
 			$data['articleNum'] = $this->tool->img_article->where(['state' => 1, 'uId' => I('post.uId')])->count();
 			$data['articleDeleteNum'] = $this->tool->img_article->where(['state' => 2, 'uId' => I('post.uId')])->count();

@@ -85,7 +85,6 @@ return array(
 		'w/webUserList'				=> 	'home/admin/web_user_list',
 		'u/login' 					=> 	'home/web/login',
 		'u/user_add' 				=> 	'home/web/user_add',
-		'u/forgetpass' 				=> 	'home/web/forgetpass',
 		'u/emailrepeat' 			=> 	'home/web/emailrepeat',
 		'u/send' 					=> 	'home/web/Send',
 		'u/retrievePassword' 		=> 	'home/web/retrievePassword',
