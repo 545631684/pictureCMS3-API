@@ -131,6 +131,17 @@ class Tool {
 	}
 	
 	/**
+	* 检查类型是否已全部屏蔽
+	*/
+	public function inspectTypeShield($data){
+		$num = 0;
+		for($i=0;i<count($data);$i++){
+			$data[$i]['state'] == '1' ? $num++ : $i = $i;
+		}
+		return count($data) == $num ? true : false;
+	}
+	
+	/**
 	* 获取项目、类型、分类发布的文章数
 	*/
 	public function getPublicInfo($type, $data){

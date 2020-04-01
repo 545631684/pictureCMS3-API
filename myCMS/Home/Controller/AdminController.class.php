@@ -226,9 +226,121 @@ class AdminController extends ControllerController {
 	}
 	
 	/**
+	* 添加项目屏蔽人
+	*/
+	public function addShieldUser(){
+		if (IS_POST) {
+			$detaArr = [
+				'uId' 			=> I('post.uId'),
+				'shieldInfo' 	=> I('post.shieldInfo'),
+			];
+			$userInfo = $this->tool->img_users->where(['uId' => $detaArr['uId']])->find();
+			$userShieldInfo = json_decode($userInfo['shieldInfo'],true);
+			// var_dump($userShieldInfo);
+			if($userShieldInfo == null){
+				$rtn = $this->tool->img_users->where(['uId' => $detaArr['uId']])->save(['shieldInfo' => json_encode($detaArr['shieldInfo'])]);
+				if ($rtn) {
+					$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'1','msg'=>'添加成功','status'=>true,],'JSON');
+				}else{
+					$this->ajaxReturn(['code'=>$this->tool->fail,'data'=>'1','msg'=>'添加失败','status'=>true,],'JSON');
+				}
+			} else {
+				$panduan = false; 
+				$xiugai = false;
+				for($i=0;$i<count($userShieldInfo);$i++){
+					if($userShieldInfo[$i]['pid'] == $detaArr['shieldInfo'][0]['pid']&&$userShieldInfo[$i]['state'] == '1'){
+						$panduan = true;
+					} else if($userShieldInfo[$i]['pid'] == $detaArr['shieldInfo'][0]['pid']&&$userShieldInfo[$i]['state'] == '0'){
+						$xiugai = true;
+						$userShieldInfo[$i]['state'] = '1';
+						for($j=0;$j<count($userShieldInfo[$i]['type']);$j++){
+							$userShieldInfo[$i]['type'][$j]['state'] = '1';
+						}
+					}
+				}
+				if($panduan){
+					$this->ajaxReturn(['code'=>$this->tool->fail,'data'=>'2','msg'=>'已添加','status'=>true,],'JSON');
+				} else {
+					$xiugai == false ? array_push($userShieldInfo,$detaArr['shieldInfo'][0]) : $xiugai = $xiugai;
+					$rtn = $this->tool->img_users->where(['uId' => $detaArr['uId']])->save(['shieldInfo' => json_encode($userShieldInfo)]);
+					// echo $this->tool->img_users->getLastSql();
+					if ($rtn) {
+						$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'3','msg'=>'添加成功','status'=>true,],'JSON');
+					}else{
+						$this->ajaxReturn(['code'=>$this->tool->fail,'data'=>'3','msg'=>'添加失败','status'=>true,],'JSON');
+					}
+				}
+			}
+			
+		} else {
+			$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
+		}
+	}
+	
+	/**
+	* 添加类型屏蔽人
+	*/
+	public function addShieldUserType(){
+		if (IS_POST) {
+			$detaArr = [
+				'uId' 			=> I('post.uId'),
+				'shieldInfo' 	=> I('post.shieldInfo')
+			];
+			$acceptData = $detaArr['shieldInfo'];
+			$userInfo = $this->tool->img_users->where(['uId' => $detaArr['uId']])->find();
+			$userShieldInfo = json_decode($userInfo['shieldInfo'],true);
+			if($userShieldInfo == null){
+				$rtn = $this->tool->img_users->where(['uId' => $detaArr['uId']])->save(['shieldInfo' => json_encode($acceptData)]);
+				if ($rtn) {
+					$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'1','msg'=>'添加成功','status'=>true,],'JSON');
+				}else{
+					$this->ajaxReturn(['code'=>$this->tool->fail,'data'=>'1','msg'=>'添加失败','status'=>true,],'JSON');
+				}
+			} else {
+				$panduan = false;
+				$num = 0;
+				for($i=0;$i<count($userShieldInfo);$i++){
+					if($userShieldInfo[$i]['pid'] == $detaArr['shieldInfo'][0]['pid'] && $userShieldInfo[$i]['state'] == '1'){
+						$panduan = true;
+					} else if($userShieldInfo[$i]['pid'] == $detaArr['shieldInfo'][0]['pid'] && $userShieldInfo[$i]['state'] == '0'){
+						for($e=0;$e<count($detaArr['shieldInfo'][0]['type']);$e++){
+							if($detaArr['shieldInfo'][0]['type'][$e]['state'] == '1'){
+								for($j=0;$j<count($userShieldInfo[$i]['type']);$j++){
+									if($userShieldInfo[$i]['type'][$j]['tid'] == $detaArr['shieldInfo'][0]['type'][$e]['tid'] && $userShieldInfo[$i]['type'][$j]['state'] == '0'){
+										$userShieldInfo[$i]['type'][$j]['state'] = '1';
+										// $this->tool->inspectTypeShield($userShieldInfo[$i]['type']) == true ? $userShieldInfo[$i]['state'] = '1' : $userShieldInfo[$i]['state'] = '0';
+									}else if($userShieldInfo[$i]['type'][$j]['tid'] == $detaArr['shieldInfo'][0]['type'][$e]['tid'] && $userShieldInfo[$i]['type'][$j]['state'] == '1'){
+										$panduan = true;
+									}
+								}
+							}
+						}
+					} else {
+						$num++;
+					}
+				}
+				count($userShieldInfo) == $num ? array_push($userShieldInfo,$detaArr['shieldInfo'][0]):$num = $num;
+				if($panduan){
+					// var_dump($panduan);
+					$this->ajaxReturn(['code'=>$this->tool->fail,'data'=>'2','msg'=>'已添加','status'=>true,],'JSON');
+				} else {
+					// var_dump($userShieldInfo);
+					$rtn = $this->tool->img_users->where(['uId' => $detaArr['uId']])->save(['shieldInfo' => json_encode($userShieldInfo)]);
+					if ($rtn) {
+						$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'2','msg'=>'添加成功','status'=>true,],'JSON');
+					}else{
+						$this->ajaxReturn(['code'=>$this->tool->fail,'data'=>'2','msg'=>'添加失败','status'=>true,],'JSON');
+					}
+				}
+			}
+		}
+	}
+	
+	/**
 	* 获取项目、类型、分类、标签组、标签的数据
 	*/
 	public function getPublicInfo(){
+		$userArr = $this->tool->img_users->where('1 = 1')->select();
 		$projectArr = $this->tool->getPublicInfo('project', $this->tool->img_project->where('1 = 1')->select());
 		$typeArr = $this->tool->getPublicInfo('type', $this->tool->img_type->where('1 = 1')->select());
 		$detailsArr = $this->tool->getPublicInfo('details', $this->tool->img_details->where('1 = 1')->select());
@@ -242,6 +354,7 @@ class AdminController extends ControllerController {
 				'groupLabel' 	=> $groupLabelArr  ? $groupLabelArr : "[]",
 				'label' 		=> $labelArr  ? $labelArr : "[]",
 				'srcUrl'		=> $this->tool->src_url,
+				'users'			=> $userArr ? $userArr : "[]"
 			],'msg'=>'获取成功','status'=>true,],'JSON');
 		}else{
 			$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'','msg'=>'获取失败','status'=>true,],'JSON');
@@ -491,22 +604,52 @@ class AdminController extends ControllerController {
 	*/
 	public function userRecovery(){
 		$usersArr=$this->tool->img_users->where('state = 1')->select();
+		for($i=0;$i<count($usersArr);$i++){
+			$temp = $this->tool->img_users->query("SELECT COUNT(*) as articleNum FROM img_article WHERE uId = ".$usersArr[$i]['uId']);
+			$usersArr[$i]['articleNum'] = intval($temp[0]['articleNum']);
+			$usersArr[$i]['shieldInfo'] = json_decode($usersArr[$i]['shieldInfo'],true);
+		}
 		$this->ajaxReturn(['code'=>$this->tool->success,'data'=>$usersArr == false ? [] : $usersArr, 'msg'=>'success','status'=>true,],'JSON');
 	}
 	
 	/**
-	* 用户list(状态正常的用户)
+	* 用户list(后台所有的用户)
 	*/
 	public function user_list(){
-		$usersArr=$this->tool->img_users->where('state = 0')->select();
+		$usersArr=$this->tool->img_users->select();
+		for($i=0;$i<count($usersArr);$i++){
+			$temp = $this->tool->img_users->query("SELECT COUNT(*) as articleNum FROM img_article WHERE uId = ".$usersArr[$i]['uId']);
+			$usersArr[$i]['articleNum'] = intval($temp[0]['articleNum']);
+			$usersArr[$i]['shieldInfo'] = json_decode($usersArr[$i]['shieldInfo'],true);
+		}
 		$this->ajaxReturn(['code'=>$this->tool->success,'data'=>$usersArr == false ? [] : $usersArr, 'msg'=>'success','status'=>true,],'JSON');
 	}
+	
+	/**
+	* 用户list(后台管理用户获取)
+	*/
+	public function manage_user_list(){
+		$usersArr=$this->tool->img_users->where('state = 0')->select();
+		for($i=0;$i<count($usersArr);$i++){
+			$temp = $this->tool->img_users->query("SELECT COUNT(*) as articleNum FROM img_article WHERE uId = ".$usersArr[$i]['uId']);
+			$usersArr[$i]['articleNum'] = intval($temp[0]['articleNum']);
+			$usersArr[$i]['shieldInfo'] = json_decode($usersArr[$i]['shieldInfo'],true);
+		}
+		$this->ajaxReturn(['code'=>$this->tool->success,'data'=>$usersArr == false ? [] : $usersArr, 'msg'=>'success','status'=>true,],'JSON');
+	}
+	
+	
 	
 	/**
 	* 用户list(前台显示需要的所有用户)
 	*/
 	public function web_user_list(){
-		$usersArr=$this->tool->img_users->select();
+		$usersArr = $this->tool->img_users->select();
+		for($i=0;$i<count($usersArr);$i++){
+			$temp = $this->tool->img_users->query("SELECT COUNT(*) as articleNum FROM img_article WHERE uId = ".$usersArr[$i]['uId']);
+			$usersArr[$i]['articleNum'] = intval($temp[0]['articleNum']);
+			$usersArr[$i]['shieldInfo'] = json_decode($usersArr[$i]['shieldInfo'],true);
+		}
 		$this->ajaxReturn(['code'=>$this->tool->success,'data'=>$usersArr == false ? [] : $usersArr, 'msg'=>'success','status'=>true,],'JSON');
 	}
 	
@@ -532,15 +675,15 @@ class AdminController extends ControllerController {
 	public function guanliuserSave(){
 		if(IS_POST){
 			if(I("post.password") == '') {
-				$rtn=$this->tool->img_users->where(['uId' => I("post.uId")])->save(['nickname' => I("post.nickname"), 'sex' => I("post.sex"), 'permissions' => I("post.permissions"), 'webShow' => I('post.state') == '1' ? '0' : I('post.webShow'), 'state' => I("post.state"), 'judgeLogin' => I("post.judgeLogin")]);
+				$rtn=$this->tool->img_users->where(['uId' => I("post.uId")])->save(['nickname' => I("post.nickname"), 'sex' => I("post.sex"), 'permissions' => I("post.permissions"), 'webShow' => I('post.state') == '1' ? '0' : I('post.webShow'), 'state' => I("post.state"), 'judgeLogin' => I("post.judgeLogin"), 'shieldInfo' => I("post.shieldInfo") == null ? null : json_encode(I("post.shieldInfo"))]);
 			} else {
-				$rtn=$this->tool->img_users->where(['uId' => I("post.uId")])->save(['nickname' => I("post.nickname"), 'sex' => I("post.sex"), 'password' => I("post.password"), 'permissions' => I("post.permissions"), 'webShow' => I('post.state') == '2' ? '0' : I('post.webShow'), 'state' => I("post.state")]);
+				$rtn=$this->tool->img_users->where(['uId' => I("post.uId")])->save(['nickname' => I("post.nickname"), 'sex' => I("post.sex"), 'password' => md5(I("post.password")), 'permissions' => I("post.permissions"), 'webShow' => I('post.state') == '2' ? '0' : I('post.webShow'), 'state' => I("post.state"), 'shieldInfo' => I("post.shieldInfo") == null ? null : json_encode(I("post.shieldInfo"))]);
 			}
 			
 			if($rtn){
 				$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'','msg'=>'编辑成功','status'=>true,],'JSON');
 			}else{
-				$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'','msg'=>'编辑失败','status'=>true,],'JSON');
+				$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'编辑失败','status'=>$this->tool->img_users->getLastSql(),],'JSON');
 			}
 		}
 	}
@@ -1059,22 +1202,111 @@ class AdminController extends ControllerController {
 			if(strlen(I("post.page")) == 0 || strlen(I("post.articlePageNum")) == 0) $this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
 			$page = intval(I("post.page"));
 			$articlePageNum = intval(I("post.articlePageNum"));
-			$info = ['state' => 1];
+			$project=$this->tool->img_project->where(['state' => 2])->select();
+			$types=$this->tool->img_type->where(['state' => 2])->select();
+			$details=$this->tool->img_details->where(['state' => 2])->select();
+			$userInfo = $this->tool->img_users->where(['uId' => I("post.userId")])->find();
+			$sqlNum = "SELECT count(*) num FROM img_article where state = 1";
+			$sql = "SELECT * FROM img_article where state = 1";
 			if(I("post.pid") != "") $info['projectid'] = I("post.pid");
 			if(I("post.tid") != "") $info['typeid'] = I("post.tid");
 			if(I("post.did") != "") $info['detailsid'] = I("post.did");
 			if(I("post.uid") != "") $info['uId'] = I("post.uid");
-			$articleAll=$this->tool->img_article->where($info)->count();
-			$articleArrs=$this->tool->img_article->where($info)->order('mId desc')->limit(($page - 1) * $articlePageNum, $articlePageNum)->select();
+			if($userInfo['permissions'] != 2){
+				if(count($project) != 0){
+					for($i=0;$i<count($project);$i++){
+						$info['shieldProjectid'][$i] = $project[$i]['pid'];
+					}
+				}
+				if(count($types) != 0){
+					for($j=0;$j<count($types);$j++){
+						$info['shieldTypeid'][$j] = $types[$j]['tid'];
+					}
+				}
+				if(count($details) != 0){
+					for($n=0;$n<count($details);$n++){
+						$info['shieldDetailsid'][$n] = $details[$n]['did'];
+					}
+				}
+				if($userInfo['shieldInfo'] != null){
+					$userInfo['shieldInfo'] = json_decode($userInfo['shieldInfo'], true);
+					for($s=0;$s<count($userInfo['shieldInfo']);$s++){
+						if($userInfo['shieldInfo'][$s]['state'] == '1'){
+							if($info['shieldPid'] == null) $info['shieldPid'] = [];
+							$info['shieldPid'][count($info['shieldPid'])] = $userInfo['shieldInfo'][$s]['pid'];
+						} else if($userInfo['shieldInfo'][$s]['state'] == '0'){
+							$info['shieldTid'][0] = $userInfo['shieldInfo'][$s]['pid'];
+							for($b=0;$b<count($userInfo['shieldInfo'][$s]['type']);$b++){
+								if($userInfo['shieldInfo'][$s]['type'][$b]['state'] == '1'){
+									$info['shieldTid'][1] =$userInfo['shieldInfo'][$s]['type'][$b]['tid'];
+								}
+							}
+						}
+					}
+				}
+			}
+			
+			foreach ($info as $key=>$value)
+			{
+				if($key=='projectid'){
+					$sql = $sql.' and '.'projectid = '.$value;
+					$sqlNum = $sqlNum.' and '.'projectid = '.$value;
+				} else if($key=='typeid'){
+					$sql = $sql.' and '.'typeid = '.$value;
+					$sqlNum = $sqlNum.' and '.'typeid = '.$value;
+				} else if($key=='detailsid'){
+					$sql = $sql.' and '.'detailsid = '.$value;
+					$sqlNum = $sqlNum.' and '.'detailsid = '.$value;
+				} else if($key=='uId'){
+					$sql = $sql.' and '.'uId = '.$value;
+					$sqlNum = $sqlNum.' and '.'uId = '.$value;
+				} else if($key=='shieldPid'){
+					$temp = "";
+					for($i=0;$i<count($value);$i++){
+						$temp = $temp.'projectid <> '.$value[$i].' and ';
+					}
+					$sql = $sql.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+					$sqlNum = $sqlNum.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+				} else if($key=='shieldTid'){
+					$temp = 'projectid <> '.$value[0].' and ';
+					for($j=0;$j<count($value[1]);$j++){
+						$temp = $temp.'typeid <> '.$value[1][$j].' and ';
+					}
+					$sql = $sql.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+					$sqlNum = $sqlNum.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+				} else if($key=='shieldProjectid'){
+					$temp = "";
+					for($w=0;$w<count($value);$w++){
+						$temp = $temp.'projectid <> '.$value[$w].' and ';
+					}
+					$sql = $sql.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+					$sqlNum = $sqlNum.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+				} else if($key=='shieldTypeid'){
+					$temp = "";
+					for($e=0;$e<count($value);$e++){
+						$temp = $temp.'typeid <> '.$value[$e].' and ';
+					}
+					$sql = $sql.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+					$sqlNum = $sqlNum.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+				} else if($key=='shieldDetailsid'){
+					$temp = "";
+					for($r=0;$r<count($value);$r++){
+						$temp = $temp.'detailsid <> '.$value[$r].' and ';
+					}
+					$sql = $sql.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+					$sqlNum = $sqlNum.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+				}
+			}
+			$articleAll=$this->tool->img_article->query($sqlNum);
+			$articleArrs=$this->tool->img_article->query($sql.' ORDER BY mId desc LIMIT '.($page - 1) * $articlePageNum.','.$articlePageNum);
 			if($articleArrs){
-				$this->ajaxReturn(['code'=>$this->tool->success,'data'=>['article' => $articleArrs, 'articleNum' => $articleAll, 'page' => $page ],'msg'=>'success','status'=>true,],'JSON');
+				$this->ajaxReturn(['code'=>$this->tool->success,'data'=>['article' => $articleArrs, 'articleNum' => intval($articleAll[0]['num']), 'page' => $page ],'msg'=>$info,'status'=>$this->tool->img_article->getLastSql(),],'JSON');
 			}else{
-				$this->ajaxReturn(['code'=>$this->tool->success,'data'=>['article' => [], 'articleNum' => 0],'msg'=>'没有数据','status'=>true,],'JSON');
+				$this->ajaxReturn(['code'=>$this->tool->success,'data'=>['article' => [], 'articleNum' => 0],'msg'=>$sqlNum,'status'=>$this->tool->img_article->getLastSql(),],'JSON');
 			}
 		} else {
 			$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
 		}
-		
 	}
 	
 	/**
@@ -1084,54 +1316,114 @@ class AdminController extends ControllerController {
 	{
 		if(IS_POST){
 			if(strlen(I("post.page")) == 0 || strlen(I("post.articlePageNum")) == 0) $this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
-			$keyword = I("post.keyword");
 			$page = intval(I("post.page"));
 			$articlePageNum = intval(I("post.articlePageNum"));
-			$project=$this->tool->img_project->where(['webShow' => 0])->select();
-			$types=$this->tool->img_type->where(['webShow' => 0])->select();
-			$details=$this->tool->img_details->where(['webShow' => 0])->select();
-			$users=$this->tool->img_users->where(['webShow' => 0])->select();
-			if(count($project) != 0){
-				$temp = [];
-				for($i=0;$i<count($project);$i++){
-					$temp[$i] = array('neq',$project[$i]['pid']);
-				}
-				$info['projectid'] = $temp;
-			}
-			if(count($types) != 0){
-				$temp = [];
-				for($j=0;$j<count($types);$j++){
-					$temp[$j] = array('neq',$types[$j]['tid']);
-				}
-				$info['typeid'] = $temp;
-			}
-			if(count($details) != 0){
-				$temp = [];
-				for($n=0;$n<count($details);$n++){
-					$temp[$n] = array('neq',$details[$n]['did']);
-				}
-				$info['detailsid'] = $temp;
-			}
-			if(count($users) != 0){
-				$temp = [];
-				for($o=0;$o<count($users);$o++){
-					$temp[$o] = array('neq',$users[$o]['uId']);
-				}
-				$info['uId'] = $temp;
-			}
-			$info['state'] = 1;
+			$sqlNum = "SELECT count(*) num FROM img_article where state = 1";
+			$sql = "SELECT * FROM img_article where state = 1";
+			$project=$this->tool->img_project->where(['state' => 2])->select();
+			$types=$this->tool->img_type->where(['state' => 2])->select();
+			$details=$this->tool->img_details->where(['state' => 2])->select();
+			$userInfo = $this->tool->img_users->where(['uId' => I("post.userId")])->find();
 			if(I("post.pid") != "") $info['projectid'] = I("post.pid");
 			if(I("post.tid") != "") $info['typeid'] = I("post.tid");
 			if(I("post.did") != "") $info['detailsid'] = I("post.did");
 			if(I("post.uid") != "") $info['uId'] = I("post.uid");
-			if(I("post.keyword") != "") {
-				$info['title|keyword|describe']=array("like","%{$keyword}%");
+			if(I("post.keyword") != "") $info['keyword']=I("post.keyword");
+			if($userInfo['permissions'] != 2){
+				if(count($project) != 0){
+					for($i=0;$i<count($project);$i++){
+						$info['shieldProjectid'][$i] = $project[$i]['pid'];
+					}
+				}
+				if(count($types) != 0){
+					for($j=0;$j<count($types);$j++){
+						$info['shieldTypeid'][$j] = $types[$j]['tid'];
+					}
+				}
+				if(count($details) != 0){
+					for($n=0;$n<count($details);$n++){
+						$info['shieldDetailsid'][$n] = $details[$n]['did'];
+					}
+				}
+				if($userInfo['shieldInfo'] != null){
+					$userInfo['shieldInfo'] = json_decode($userInfo['shieldInfo'], true);
+					for($s=0;$s<count($userInfo['shieldInfo']);$s++){
+						if($userInfo['shieldInfo'][$s]['state'] == '1'){
+							if($info['shieldPid'] == null) $info['shieldPid'] = [];
+							$info['shieldPid'][count($info['shieldPid'])] = $userInfo['shieldInfo'][$s]['pid'];
+						} else if($userInfo['shieldInfo'][$s]['state'] == '0'){
+							$info['shieldTid'][0] = $userInfo['shieldInfo'][$s]['pid'];
+							for($b=0;$b<count($userInfo['shieldInfo'][$s]['type']);$b++){
+								if($userInfo['shieldInfo'][$s]['type'][$b]['state'] == '1'){
+									$info['shieldTid'][1] =$userInfo['shieldInfo'][$s]['type'][$b]['tid'];
+								}
+							}
+						}
+					}
+				}
 			}
-			$articleAll=$this->tool->img_article->where($info)->count();
-			$articleArrs=$this->tool->img_article->where($info)->order('mId desc')->limit(($page - 1) * $articlePageNum, $articlePageNum)->select();
-			$sql = $this->tool->img_article->getLastSql();
+			
+			
+			foreach ($info as $key=>$value)
+			{
+				if($key=='projectid'){
+					$sql = $sql.' and '.'projectid = '.$value;
+					$sqlNum = $sqlNum.' and '.'projectid = '.$value;
+				} else if($key=='typeid'){
+					$sql = $sql.' and '.'typeid = '.$value;
+					$sqlNum = $sqlNum.' and '.'typeid = '.$value;
+				} else if($key=='detailsid'){
+					$sql = $sql.' and '.'detailsid = '.$value;
+					$sqlNum = $sqlNum.' and '.'detailsid = '.$value;
+				} else if($key=='uId'){
+					$sql = $sql.' and '.'uId = '.$value;
+					$sqlNum = $sqlNum.' and '.'uId = '.$value;
+				} else if($key=='keyword'){
+					$sql = $sql." and ( `title` LIKE '%".$value."%' OR `keyword` LIKE '%".$value."%' OR `describe` LIKE '%".$value."%' )";
+					$sqlNum = $sqlNum." and ( `title` LIKE '%".$value."%' OR `keyword` LIKE '%".$value."%' OR `describe` LIKE '%".$value."%' )";
+				} else if($key=='shieldPid'){
+					$temp = "";
+					for($i=0;$i<count($value);$i++){
+						$temp = $temp.'projectid <> '.$value[$i].' and ';
+					}
+					$sql = $sql.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+					$sqlNum = $sqlNum.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+				} else if($key=='shieldTid'){
+					$temp = "";
+					$temp = 'projectid <> '.$value[0].' and ';
+					for($j=0;$j<count($value[1]);$j++){
+						$temp = $temp.'typeid <> '.$value[1][$j].' and ';
+					}
+					$sql = $sql.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+					$sqlNum = $sqlNum.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+				} else if($key=='shieldProjectid'){
+					$temp = "";
+					for($w=0;$w<count($value);$w++){
+						$temp = $temp.'projectid <> '.$value[$w].' and ';
+					}
+					$sql = $sql.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+					$sqlNum = $sqlNum.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+				} else if($key=='shieldTypeid'){
+					$temp = "";
+					for($e=0;$e<count($value);$e++){
+						$temp = $temp.'typeid <> '.$value[$e].' and ';
+					}
+					$sql = $sql.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+					$sqlNum = $sqlNum.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+				} else if($key=='shieldDetailsid'){
+					$temp = "";
+					for($r=0;$r<count($value);$r++){
+						$temp = $temp.'detailsid <> '.$value[$r].' and ';
+					}
+					$sql = $sql.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+					$sqlNum = $sqlNum.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+				}
+			}
+			$articleAll=$this->tool->img_article->query($sqlNum);
+			$articleArrs=$this->tool->img_article->query($sql.' ORDER BY mId desc LIMIT '.($page - 1) * $articlePageNum.','.$articlePageNum);
+			// $sql = $this->tool->img_article->getLastSql();
 			if($articleArrs){
-				$this->ajaxReturn(['code'=>$this->tool->success,'data'=>['article' => $articleArrs, 'articleNum' => $articleAll, 'page' => $page ],'msg'=>$sql,'status'=>true,],'JSON');
+				$this->ajaxReturn(['code'=>$this->tool->success,'data'=>['article' => $articleArrs, 'articleNum' => intval($articleAll[0]['num']), 'page' => $page ],'msg'=>$sql,'status'=>true,],'JSON');
 			}else{
 				$this->ajaxReturn(['code'=>$this->tool->success,'data'=>['article' => [], 'articleNum' => 0],'msg'=>$sql,'status'=>true,],'JSON');
 			}

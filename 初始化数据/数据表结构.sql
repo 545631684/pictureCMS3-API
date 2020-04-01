@@ -10,7 +10,7 @@ Target Server Type    : MYSQL
 Target Server Version : 50617
 File Encoding         : 65001
 
-Date: 2019-12-13 13:30:23
+Date: 2020-01-19 13:52:10
 */
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -39,7 +39,7 @@ CREATE TABLE `img_article` (
   `click` int(11) NOT NULL DEFAULT '0' COMMENT '点击数',
   `state` int(11) DEFAULT NULL COMMENT '状态值：1正常，2禁用',
   PRIMARY KEY (`mId`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for img_auth_group
@@ -97,7 +97,7 @@ CREATE TABLE `img_details` (
   `state` int(11) NOT NULL COMMENT '状态值：1正常，2禁用',
   `webShow` int(11) NOT NULL COMMENT '前台显示开关：0关，1开',
   PRIMARY KEY (`did`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for img_group_label
@@ -110,7 +110,7 @@ CREATE TABLE `img_group_label` (
   `state` int(11) DEFAULT NULL COMMENT '状态值：1正常，2禁用',
   `webShow` int(11) DEFAULT '1' COMMENT '前台显示开关：0关，1开',
   PRIMARY KEY (`gid`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for img_information
@@ -124,7 +124,8 @@ CREATE TABLE `img_information` (
   `created` int(11) NOT NULL COMMENT '操作时间',
   `state` int(11) NOT NULL COMMENT '状态值：1正常，2禁用',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
+
 -- ----------------------------
 -- Table structure for img_label
 -- ----------------------------
@@ -136,7 +137,30 @@ CREATE TABLE `img_label` (
   `state` int(11) DEFAULT NULL COMMENT '状态值：1正常，2禁用',
   `webShow` int(11) DEFAULT '1' COMMENT '前台显示开关：0关，1开',
   PRIMARY KEY (`lid`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
+
+-- ----------------------------
+-- Table structure for img_operationinfo
+-- ----------------------------
+DROP TABLE IF EXISTS `img_operationinfo`;
+CREATE TABLE `img_operationinfo` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `uId` int(11) DEFAULT NULL,
+  `type` varchar(255) DEFAULT NULL COMMENT '用户操作类型数字：1.发布文章,2.修改文章,3.删除文章（回收站）,4.删除文章（回收站删除）,5.修改个人信息,6.添加新用户,7.修改用户信息,8.还原用户,9.添加用户组,10.修改用户组,11.删除用户组,12.添加项目,13.修改项目,14.删除项目,15.添加类型,16.修改类型,17.删除类型,18.添加分类,19.修改分类,20.删除分类,21.添加标签组,22.修改标签组,23.删除标签组,24.添加标签,25.修改标签,26.删除标签,27.登录后台,28.退出后台,29.下载文件,30.系统删除回收站文章（保留天数已到）',
+  `time` int(11) DEFAULT NULL COMMENT '操作时间',
+  `contentText` varchar(255) DEFAULT NULL COMMENT '用户操作信息显示',
+  `content_groupText` varchar(255) DEFAULT NULL COMMENT '管理员版用户操作信息',
+  `content_user` longtext COMMENT '操作内容：用户信息',
+  `content_project` longtext COMMENT '操作内容：项目',
+  `content_type` longtext COMMENT '操作内容：类型',
+  `content_classification` longtext COMMENT '操作内容：分类',
+  `content_group_label` longtext COMMENT '操作内容：标签组',
+  `content_label` longtext COMMENT '操作内容：标签',
+  `content_article_type` longtext COMMENT '操作内容：文章类型',
+  `content_auth_group` longtext COMMENT '操作内容：用户组',
+  `content_article` longtext COMMENT '操作内容：文章',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for img_project
@@ -148,7 +172,7 @@ CREATE TABLE `img_project` (
   `state` int(11) NOT NULL DEFAULT '1' COMMENT '状态值：1正常，2禁用',
   `webShow` int(11) NOT NULL DEFAULT '1' COMMENT '前台显示开关：0关，1开',
   PRIMARY KEY (`pid`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for img_type
@@ -160,7 +184,7 @@ CREATE TABLE `img_type` (
   `state` int(11) NOT NULL COMMENT '状态值：1正常，2禁用',
   `webShow` int(11) NOT NULL COMMENT '前台显示开关：0关，1开',
   PRIMARY KEY (`tid`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for img_users
@@ -183,4 +207,4 @@ CREATE TABLE `img_users` (
   `token_expires_in` int(13) DEFAULT '0' COMMENT 'token有效期至',
   `judgeLogin` varchar(255) DEFAULT '0' COMMENT '是否登录， 0退出，1登录',
   PRIMARY KEY (`uId`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
