@@ -83,6 +83,13 @@ class Tool {
 	}
 	
 	/**
+     * 去除特殊字符
+     */
+	public function filterFileName($fileName) {
+        return str_replace(['/','\\',':','*','"','<','>','|','?'],'_',$fileName);
+    }
+	
+	/**
 	* 生成用户token
 	*/
 	public function secretkey($name){

@@ -702,7 +702,28 @@ class AdminController extends ControllerController {
 		);
 		$upobj = new \Think\Upload($con);
 		$arr = $upobj->upload();
-		$imgcompress = $this->imgcompress;
+		
+		// 解决部分手机拍摄的照片过度旋转导致图片显示不正常的修复
+		if($arr && strrchr($arr['file']['savename'],'.') == ".jpg"){
+			$image = imagecreatefromstring(file_get_contents($arr['file']['savepath'].$arr['file']['savename']));
+			$exif = exif_read_data($arr['file']['savepath'].$arr['file']['savename']);
+
+			if(!empty($exif['Orientation'])) {
+				switch($exif['Orientation']) {
+					 case 8:
+					  $image = imagerotate($image,90,0);
+					  break;
+					 case 3:
+					  $image = imagerotate($image,180,0);
+					  break;
+					 case 6:
+					  $image = imagerotate($image,-90,0);
+					  break;
+				}
+			}
+			imagejpeg($image,$arr['file']['savepath'].$arr['file']['savename'],100);
+		}
+		
 		if ($arr) {	//上传成功
 			$yuanwenj=$arr['file']['name'];
 			$id=I('get.id');
@@ -711,10 +732,8 @@ class AdminController extends ControllerController {
 				$res['dataImg']="file/img/".date("Y-m-d")."/".$arr['file']['savename'];
 				$res['type']="1";
 				$dir="file/miniImg/".date("Y-m-d");
-				if (!file_exists($dir)){
-					mkdir ($dir,0777,true);
-				}
 				$houzhui=strrchr($arr['file']['savename'],'.');
+				if (!file_exists($dir)) mkdir ($dir,0777,true);
 				if($houzhui!=".gif"){
 					$res['miniImg']=$dir."/".'mini_'.$arr['file']['savename'];
 					$image->open($res['dataImg']);

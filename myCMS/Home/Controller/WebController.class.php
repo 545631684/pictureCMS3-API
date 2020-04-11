@@ -226,7 +226,7 @@ class WebController extends ControllerController {
 	public function zipdownload(){
 		if(IS_POST){
 			$zip = new \ZipArchive();
-			$downloadFileName = time().'-'.iconv("UTF-8", "GBK", I("post.title").'.zip');
+			$downloadFileName = time().'-'.iconv("UTF-8", "GBK", $this->tool->filterFileName(I("post.title")).'.zip');
 			$downloadFileSrc = iconv("UTF-8", "GBK", './down/');
 			$packDownloadFileName = $downloadFileSrc.$downloadFileName;
 			$downloadFiles = [];
