@@ -702,7 +702,9 @@ class AdminController extends ControllerController {
 		);
 		$upobj = new \Think\Upload($con);
 		$arr = $upobj->upload();
-		
+		// 去除特殊符号导致的保存失败
+		$arr['file']['savename'] = $this->tool->filterFileName($arr['file']['savename']);
+		$arr['file']['name'] = $this->tool->filterFileName($arr['file']['name']);
 		// 解决部分手机拍摄的照片过度旋转导致图片显示不正常的修复
 		if($arr && strrchr($arr['file']['savename'],'.') == ".jpg"){
 			$image = imagecreatefromstring(file_get_contents($arr['file']['savepath'].$arr['file']['savename']));
@@ -779,6 +781,39 @@ class AdminController extends ControllerController {
 				$res['type']='5';
 				$res['msg']='0';
 			} else if($id=="6"){//视频
+				/*$houzhui=strrchr($arr['file']['savename'],'.');
+				$fileSrc = "file/img/".date("Y-m-d")."/".$arr['file']['savename'];
+				$folder="file/videoview/".date("Y-m-d")."/";
+				$filename=$arr['file']['savename'];
+				if($houzhui != '.mp4'){
+					$str = "ffmpeg -i " . $fileSrc . "  -c:v libx264 -strict -2 " . $folder . stristr($filename,'.',true) . ".mp4";
+					exec($str, $output);
+					if(exec){
+						$res['dataVideo']=$folder . stristr($filename,'.',true) . ".mp4";
+						if($res['dataVideo']!=""){
+							$str = "ffmpeg -i " . $res['dataVideo'] . " -y -f mjpeg -ss 3 -t 1 -s 740x500 " . $folder . $pathimg;
+							exec($str, $output);
+							if(exec){
+								$res['Videoview']=$folder.$pathimg;
+							}
+						}
+					}
+				} else {
+					$res['dataVideo']="file/img/".date("Y-m-d")."/".$arr['file']['savename'];
+					$filevideo=$res['dataVideo'];
+					if($filevideo!=""){
+						$dir = iconv("UTF-8", "GBK", $folder);
+						if (!file_exists($dir)){
+							mkdir ($dir,0777,true);
+						}
+						$pathimg=$filename.".png";
+						$str = "ffmpeg -i " . $filevideo . " -y -f mjpeg -ss 3 -t 1 -s 740x500 " . $folder . $pathimg;
+						exec($str, $output);
+						if(exec){
+							$res['Videoview']=$folder.$pathimg;
+						}
+					}
+				}*/
 				$res['dataVideo']="file/img/".date("Y-m-d")."/".$arr['file']['savename'];
 				$filevideo=$res['dataVideo'];
 				$filename=$arr['file']['savename'];
@@ -987,10 +1022,54 @@ class AdminController extends ControllerController {
 			$data['activeProjectUserMonthImg'] = $Model->query("SELECT p.pid, p.xname, u.uId, u.nickname, count(*) as 'img' FROM (SELECT * FROM img_article WHERE typeFile = 'img' and registerTimeImg >= ".$beginThismonth." and registerTimeImg <= ".$endThismonth.") a, img_project p, img_users u WHERE a.projectid = p.pid and a.uId = u.uId group by u.nickname, p.xname;");
 			$data['activeProjectUserMonthPsd'] = $Model->query("SELECT p.pid, p.xname, u.uId, u.nickname, count(*) as 'psd' FROM (SELECT * FROM img_article WHERE typeFile = 'psd' and registerTimeImg >= ".$beginThismonth." and registerTimeImg <= ".$endThismonth.") a, img_project p, img_users u WHERE a.projectid = p.pid and a.uId = u.uId group by u.nickname, p.xname;");
 			$data['activeProjectUserMonthVideo'] = $Model->query("SELECT p.pid, p.xname, u.uId, u.nickname, count(*) as 'video' FROM (SELECT * FROM img_article WHERE typeFile = 'video' and registerTimeImg >= ".$beginThismonth." and registerTimeImg <= ".$endThismonth.") a, img_project p, img_users u WHERE a.projectid = p.pid and a.uId = u.uId group by u.nickname, p.xname;");
-
+			
+			// 每日网站浏览统计
+			$data['userBrowseWebInfo'] = $Model->query("SELECT u.nickname,count(*) as count,d.uId,d.sameDay FROM img_browse_web_info d, img_users u WHERE d.sameDay = '".date('Y-m-d')."' and d.uId = u.uid group by u.nickname,d.uId");
+			
+			
+			
 			$this->ajaxReturn(['code'=>$this->tool->success,'data'=>$data,'msg'=>'success','status'=>true,],'JSON');
 		}else{
 			$this->ajaxReturn(['code'=>$this->tool->fail,'data'=>'111','msg'=>'获取失败','status'=>true,],'JSON');
+		}
+	}
+	
+	/**
+	* 查询用户浏览数据
+	*/
+	public function getUserBrowseWebInfo () {
+		if(IS_POST)
+		{
+			$Model = new \Think\Model();
+			if(I("post.startDate") == I("post.endDate")){
+				$data['riqi'] = [I("post.startDate")];
+			} else {
+				$data['riqi']= $this->tool->getDateFromRange(strtotime(date(I("post.startDate").'00:00:00')), strtotime(date(I("post.endDate").'00:00:00')));
+			}
+			$data['users'] = $Model->query("select nickname,uId from img_users WHERE state=0");
+			
+			// 用户名称
+			if(count($data['users']) != 0){
+				for ($i=0; $i<count($data['users']); $i++) {
+					$data['name'][$i] = $data['users'][$i]['nickname'];
+				}
+			}
+
+
+			// 循环获取在职用户浏览数据
+			for ($e=0; $e<count($data['users']); $e++) {
+				$data['userBrowseWebInfo'][$e]['name'] = $data['users'][$e]['nickname'];
+				for ($l=0; $l<count($data['riqi']); $l++) {
+					$data['temp'] =  $Model->query("SELECT count(*) as num from img_browse_web_info WHERE sameDay = '".$data['riqi'][$l]."' and uId = ".$data['users'][$e]['uId']);
+					$data['temp2'][$l] =  "SELECT count(*) as num from img_browse_web_info WHERE sameDay = ".$data['riqi'][$l]." and uId = ".$data['users'][$e]['uId'];
+					$data['userBrowseWebInfo'][$e]['data'][$l] = $data['temp'] == null ? '0' : $data['temp'][0]['num'];
+					$data['temp'] = [];
+				}
+			}
+
+			$this->ajaxReturn(['code'=>$this->tool->success,'data'=>['names'=>$data['name'], 'riqi'=>$data['riqi'], 'info'=>$data['userBrowseWebInfo']],'msg'=>'success','status'=>true,],'JSON');
+		} else {
+			$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
 		}
 	}
 	
@@ -1149,7 +1228,7 @@ class AdminController extends ControllerController {
 				'detailsid' 		=> I('post.detailsid'),
 				'title' 			=> I('post.title'),
 				'keyword' 			=> I('post.keyword'),
-				'describe' 			=> I('post.describe'),
+				'describe' 			=> html_entity_decode(I('post.describe')),
 				'img' 				=> I('post.typeFile') == 'img' || 'video' ?  json_encode(I('post.img')) : '"[]"',
 				'psd' 				=> I('post.typeFile') == 'psd' ? json_encode(I('post.psd')) : '"[]"',
 				'video' 			=> I('post.typeFile') == 'video' ? json_encode(I('post.video')) : '"[]"',
@@ -1220,7 +1299,7 @@ class AdminController extends ControllerController {
 		if(IS_POST){
 			if(strlen(I("post.page")) == 0 || strlen(I("post.articlePageNum")) == 0) $this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
 			$page = intval(I("post.page"));
-			$articlePageNum = intval(I("post.articlePageNum"));
+			$articlePageNum = intval(I("post.articlePageNum")) < 5 ? 5 : intval(I("post.articlePageNum"));
 			$project=$this->tool->img_project->where(['state' => 2])->select();
 			$types=$this->tool->img_type->where(['state' => 2])->select();
 			$details=$this->tool->img_details->where(['state' => 2])->select();
@@ -1336,7 +1415,7 @@ class AdminController extends ControllerController {
 		if(IS_POST){
 			if(strlen(I("post.page")) == 0 || strlen(I("post.articlePageNum")) == 0) $this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
 			$page = intval(I("post.page"));
-			$articlePageNum = intval(I("post.articlePageNum"));
+			$articlePageNum = intval(I("post.articlePageNum")) < 8 ? 8 : intval(I("post.articlePageNum"));
 			$sqlNum = "SELECT count(*) num FROM img_article where state = 1";
 			$sql = "SELECT * FROM img_article where state = 1";
 			$project=$this->tool->img_project->where(['state' => 2])->select();
@@ -1437,6 +1516,11 @@ class AdminController extends ControllerController {
 					$sql = $sql.' and ( '.substr($temp,0,strlen($temp)-5).' )';
 					$sqlNum = $sqlNum.' and ( '.substr($temp,0,strlen($temp)-5).' )';
 				}
+			}
+			if($userInfo['permissions'] == 4){
+				$time = strtotime("-0 year -3 month -0 day");
+				$sql = $sql.' and '.'registerTimeImg < '.$time;
+				$sqlNum = $sqlNum.' and '.'registerTimeImg < '.$time;
 			}
 			$articleAll=$this->tool->img_article->query($sqlNum);
 			$articleArrs=$this->tool->img_article->query($sql.' ORDER BY mId desc LIMIT '.($page - 1) * $articlePageNum.','.$articlePageNum);
@@ -1558,6 +1642,29 @@ class AdminController extends ControllerController {
 	}
 	
 	/**
+	* 记录人员当然浏览次数
+	*/
+	public function setUserBrowseArticle(){
+		$info = [
+			'uId' => I('post.uId'),
+			'sameDay' => date('Y-m-d'),
+			'mId' => null,
+			'time' => time(),
+		];
+		$articleArrs=$this->tool->img_browse_web_info->where(['uId' => $info['uId'], 'sameDay' => $info['sameDay'], 'mId' => array('exp','is null')])->find();
+		if($articleArrs){
+			$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'','msg'=>'记录成功','status'=>true,],'JSON');
+		} else {
+			$n = $this->tool->img_browse_web_info->add($info);
+			if($n){
+				$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'','msg'=>'记录成功','status'=>true,],'JSON');
+			} else {
+				$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'','msg'=>'记录失败','status'=>true,],'JSON');
+			}
+		}
+	}
+	
+	/**
 	* 获取单个文章信息(后台)
 	*/
 	public function getAdminArticle()
@@ -1634,6 +1741,7 @@ class AdminController extends ControllerController {
 			$r = $this->tool->img_article->getLastSql();
 			$article['user'] = $this->tool->img_users->where(['uId' => $article['uId']])->find();
 			$this->tool->img_article->where(['mId' => $article['mId']])->save(['click' => intval($article['click']) + 1 ]);
+			$this->tool->img_browse_web_info->add(['uId' => I('post.uId'), 'sameDay' => date('Y-m-d'), 'mId' => $article['mId'], 'time' => time()]);
 			$this->ajaxReturn(['code'=>$this->tool->success,'data'=>$article,'msg'=>'获取成功','status'=>$r,],'JSON');
 		} else {
 			$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
@@ -1654,7 +1762,7 @@ class AdminController extends ControllerController {
 				'did' => I('post.did'),
 				'title' => I('post.title'),
 				'keyword' => I('post.keyword'),
-				'describe' => I('post.describe'),
+				'describe' => html_entity_decode(I('post.describe')),
 				'img' => json_encode(I('post.img')),
 				'psd' => json_encode(I('post.psd')),
 				'video' => json_encode(I('post.video')),

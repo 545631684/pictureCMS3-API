@@ -20,6 +20,7 @@ class Tool {
 	public $img_collect;
 	public $img_information;
 	public $img_operationinfo;
+	public $img_browse_web_info;
 	public $src_url;
 	public $time_second;
 	public $time_minute;
@@ -49,6 +50,7 @@ class Tool {
 		$this->img_collect = M(C('IMG_COLLECT'));
 		$this->img_information = M(C('IMG_INFORMATION'));
 		$this->img_operationinfo = M(C('IMG_OPERATIONINFO'));
+		$this->img_browse_web_info = M(C('IMG_BROWSE_WEB_INFO'));
 		// 初始化时间值
 		$this->time_second = C('TIME_SECOND');
 		$this->time_minute = C('TIME_MINUTE');
@@ -355,6 +357,30 @@ class Tool {
 				return mktime(23, 59, 59, 12, $this ->is_yue_tian_num(date('Y'), 12), date('Y'));
 			}
 		}
+	}
+	
+	/**
+	* 获取指定日期段内每一天的日期
+	* @param  Date  $startdate 开始日期
+	* @param  Date  $enddate   结束日期
+	* @return Array
+	*/
+	function getDateFromRange($startdate, $enddate){
+
+		$stimestamp = $startdate;
+		$etimestamp = $enddate;
+	
+		// 计算日期段内有多少天
+		$days = ($etimestamp-$stimestamp)/86400+1;
+		// 保存每天日期
+		$date = array();
+
+		for($i=0; $i<$days; $i++){
+			$date[] = date('Y-m-d', $stimestamp+(86400*$i));
+		}
+		
+
+		return $date;
 	}
 	
 	/**

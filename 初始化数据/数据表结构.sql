@@ -1,4 +1,4 @@
-﻿/*
+/*
 Navicat MySQL Data Transfer
 
 Source Server         : localhost_3306
@@ -10,7 +10,7 @@ Target Server Type    : MYSQL
 Target Server Version : 50617
 File Encoding         : 65001
 
-Date: 2020-01-19 13:52:10
+Date: 2020-05-04 17:02:22
 */
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -39,7 +39,7 @@ CREATE TABLE `img_article` (
   `click` int(11) NOT NULL DEFAULT '0' COMMENT '点击数',
   `state` int(11) DEFAULT NULL COMMENT '状态值：1正常，2禁用',
   PRIMARY KEY (`mId`)
-) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=5725 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for img_auth_group
@@ -52,7 +52,7 @@ CREATE TABLE `img_auth_group` (
   `rules` longtext NOT NULL COMMENT '功能页面参数',
   `disabled` char(100) NOT NULL DEFAULT '1' COMMENT '禁止修改：1允许修改，2禁止修改',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for img_auth_rule_copy
@@ -97,7 +97,7 @@ CREATE TABLE `img_details` (
   `state` int(11) NOT NULL COMMENT '状态值：1正常，2禁用',
   `webShow` int(11) NOT NULL COMMENT '前台显示开关：0关，1开',
   PRIMARY KEY (`did`)
-) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=374 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for img_group_label
@@ -110,7 +110,7 @@ CREATE TABLE `img_group_label` (
   `state` int(11) DEFAULT NULL COMMENT '状态值：1正常，2禁用',
   `webShow` int(11) DEFAULT '1' COMMENT '前台显示开关：0关，1开',
   PRIMARY KEY (`gid`)
-) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for img_information
@@ -124,7 +124,7 @@ CREATE TABLE `img_information` (
   `created` int(11) NOT NULL COMMENT '操作时间',
   `state` int(11) NOT NULL COMMENT '状态值：1正常，2禁用',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1347 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for img_label
@@ -137,7 +137,7 @@ CREATE TABLE `img_label` (
   `state` int(11) DEFAULT NULL COMMENT '状态值：1正常，2禁用',
   `webShow` int(11) DEFAULT '1' COMMENT '前台显示开关：0关，1开',
   PRIMARY KEY (`lid`)
-) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=285 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for img_operationinfo
@@ -160,7 +160,7 @@ CREATE TABLE `img_operationinfo` (
   `content_auth_group` longtext COMMENT '操作内容：用户组',
   `content_article` longtext COMMENT '操作内容：文章',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1984 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for img_project
@@ -172,7 +172,7 @@ CREATE TABLE `img_project` (
   `state` int(11) NOT NULL DEFAULT '1' COMMENT '状态值：1正常，2禁用',
   `webShow` int(11) NOT NULL DEFAULT '1' COMMENT '前台显示开关：0关，1开',
   PRIMARY KEY (`pid`)
-) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=38 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for img_type
@@ -184,7 +184,7 @@ CREATE TABLE `img_type` (
   `state` int(11) NOT NULL COMMENT '状态值：1正常，2禁用',
   `webShow` int(11) NOT NULL COMMENT '前台显示开关：0关，1开',
   PRIMARY KEY (`tid`)
-) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=56 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for img_users
@@ -194,7 +194,7 @@ CREATE TABLE `img_users` (
   `uId` mediumint(10) NOT NULL AUTO_INCREMENT COMMENT '编号',
   `headPortraitSrc` varchar(255) DEFAULT NULL COMMENT '头像路径',
   `nickname` varchar(255) DEFAULT NULL COMMENT '昵称',
-  `sex` int(11) DEFAULT NULL COMMENT '1男，0女',
+  `sex` int(11) DEFAULT '0' COMMENT '1男，0女',
   `userName` varchar(255) NOT NULL COMMENT '用户名',
   `password` varchar(255) NOT NULL COMMENT '密码',
   `verification` varchar(255) DEFAULT NULL COMMENT '验证码',
@@ -206,5 +206,6 @@ CREATE TABLE `img_users` (
   `access_token` varchar(255) DEFAULT NULL COMMENT 'access_token',
   `token_expires_in` int(13) DEFAULT '0' COMMENT 'token有效期至',
   `judgeLogin` varchar(255) DEFAULT '0' COMMENT '是否登录， 0退出，1登录',
+  `shieldInfo` longtext COMMENT '屏蔽的项目和类型',
   PRIMARY KEY (`uId`)
-) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=52 DEFAULT CHARSET=utf8;

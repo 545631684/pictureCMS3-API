@@ -29,7 +29,7 @@ return array(
 	'MODULE_ALLOW_LIST'		=> array('Home'),
 	'URL_ROUTE_RULES'       => array(
 		/******************* 后台接口begin ***********************/
-		'a/manageUser_list' 				=> 	'home/admin/manage_user_list',
+		'a/manageUser_list' 		=> 	'home/admin/manage_user_list',
 		'a/user_list' 				=> 	'home/admin/userList',
 		'a/auth_list' 				=> 	'home/admin/auth_list',
 		'a/auth_groupadd' 			=> 	'home/admin/auth_groupadd',
@@ -79,6 +79,8 @@ return array(
 		'a/exitlogin'				=> 	'home/admin/exitlogin',
 		'a/addShieldUser'			=> 	'home/admin/addShieldUser',
 		'a/addShieldUserType'		=> 	'home/admin/addShieldUserType',
+		'a/setUserBrowseArticle'	=> 	'home/admin/setUserBrowseArticle',
+		'a/getUserBrowseWebInfo'	=> 	'home/admin/getUserBrowseWebInfo',
 		/******************* 后台接口end *************************/
 		
 		/******************* 前台接口begin ***********************/
