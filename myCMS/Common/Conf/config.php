@@ -81,6 +81,7 @@ return array(
 		'a/addShieldUserType'		=> 	'home/admin/addShieldUserType',
 		'a/setUserBrowseArticle'	=> 	'home/admin/setUserBrowseArticle',
 		'a/getUserBrowseWebInfo'	=> 	'home/admin/getUserBrowseWebInfo',
+		'a/userState'				=> 	'home/admin/userState',
 		/******************* 后台接口end *************************/
 		
 		/******************* 前台接口begin ***********************/
@@ -93,6 +94,7 @@ return array(
 		'u/emailrepeat' 			=> 	'home/web/emailrepeat',
 		'u/send' 					=> 	'home/web/Send',
 		'u/retrievePassword' 		=> 	'home/web/retrievePassword',
+		'u/upfile' 					=> 	'home/upfile/upfile',
 		'w/setOperationInfo' 		=> 	'home/web/setOperationInfo',
 		'w/getOperationInfo' 		=> 	'home/web/getOperationInfo',
 		/******************* 前台接口end *************************/

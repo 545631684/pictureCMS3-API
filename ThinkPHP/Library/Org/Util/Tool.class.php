@@ -102,8 +102,8 @@ class Tool {
 	* 用户token时效增加一天
 	*/
 	public function setTokenTimeDay($tokenTime, $uId){
-		$rtn=$this->img_users->where(['uId' => $uId])->save(['token_expires_in' => $tokenTime + C("TIME_DAY")]);
-		return $tokenTime + C("TIME_DAY");
+		$rtn=$this->img_users->where(['uId' => $uId])->save(['token_expires_in' => time() + C("TIME_DAY")]);
+		return time() + C("TIME_DAY");
 	}
 	
 	/**

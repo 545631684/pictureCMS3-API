@@ -35,9 +35,10 @@ class WebController extends ControllerController {
 						//修改用户状态
 						$rtn=$this->tool->img_users->where(['uId' => $userArr['uId']])->save(['judgeLogin' => 1, 'endTime' => time()]);
 						// 版本转移时的临时添加，因增加字段没有赋值access_token和合法时长
-						if(!$userArr['access_token']){
-							$this->tool->img_users->where(['uId' => $userArr['uId']])->save(['access_token' => $this->tool->secretkey($userArr['userName']), 'token_expires_in' => time() + $this->tool->time_day]);
-						}
+						// if(!$userArr['access_token']){
+							// $this->tool->img_users->where(['uId' => $userArr['uId']])->save(['access_token' => $this->tool->secretkey($userArr['userName']), 'token_expires_in' => 0]);
+							// $this->tool->img_users->where(['uId' => $userArr['uId']])->save(['access_token' => $this->tool->secretkey($userArr['userName']), 'token_expires_in' => (time() + $this->tool->time_day)]);
+						// }
 						$jsonArr = [
 							'adminInfo'			=> [
 								'uId'				=> $userArr['uId'],
@@ -74,7 +75,7 @@ class WebController extends ControllerController {
 								'token_expires_in'	=> $userArr['token_expires_in'] <= time() ? $this->tool->setTokenTimeDay($userArr['token_expires_in'],$userArr['uId']) : $userArr['token_expires_in'],
 							]
 						];
-						$this->ajaxReturn(['code'=>$this->tool->success,'data'=>$jsonArr,'msg'=>'登录成功','status'=>true,],'JSON');
+						$this->ajaxReturn(['code'=>$this->tool->success,'data'=>$jsonArr,'msg'=>'登录成功','status'=>$this->tool->img_users->getLastSql(),],'JSON');
 					}else{
 						$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'1','msg'=>'用户名或密码错误','status'=>true,],'JSON');
 					}

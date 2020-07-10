@@ -7,7 +7,7 @@ return array(
 	'TIME_DAY'				=> 86400,	// 1天
 	'TIME_WEEK'				=> 604800,	// 1周
 	'TIME_MONTH'			=> 18144000,// 1个月	
-	'SRC_URL'				=> 'http://192.168.1.130/', //  前台文件调用域名
+	'SRC_URL'				=> 'http://192.168.0.130/', //  前台文件调用域名
 	/* 数据库表 */
 	'IMG_ARTICLE'			=> 'article',// 文章表	
 	'IMG_AUTH_GROUP'		=> 'auth_group',// 权限组表

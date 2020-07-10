@@ -26,15 +26,16 @@ class AdminController extends ControllerController {
 		// 数据库查找
 		$user = $img_users->where(['access_token' => $headers['Accesstoken']])->find();
 		if($user['access_token']){
-			if ($user['token_expires_in'] <= time()) {
+			if ($user['token_expires_in'] >= (time()+C("TIME_DAY"))) {
 				$judgeToken = false;
 			}
 		} else {
 			$judgeToken = false;
 		}
-		if(!judgeToken){
-			$this->ajaxReturn(['code'=>$this->tool->token_invalid,'data'=>'','msg'=>'success','status'=>true,],'JSON');
+		if(!$judgeToken){
+			$this->ajaxReturn(['code'=>-4001,'data'=>'','msg'=>'success','status'=>true,],'JSON');
 		}
+		
 	}
 	
 	/**
@@ -980,8 +981,23 @@ class AdminController extends ControllerController {
 			$data['typeAll'] = $this->tool->img_type->where("1=1")->select();
 			// 所有项目
 			$data['projectAll'] = $this->tool->img_project->where("1=1")->select();
+			
 			// 最近发布文章
-			$data['activeLately'] = $Model->query("SELECT a.mId, a.typeFile, a.title, a.img, a.psd, a.video, a.registerTimeImg, u.nickname, u.sex, a.click FROM img_article a, img_users u WHERE a.uId = u.uId GROUP BY a.title ORDER BY a.registerTimeImg DESC limit 20");
+			$data['activeLately'] = $Model->query("SELECT a.mId, a.typeFile, a.title, a.img, a.psd, a.video, a.ai, a.pdf, a.word, a.excel, a.engineering, a.registerTimeImg, u.nickname, u.sex, a.click FROM img_article a, img_users u WHERE a.uId = u.uId GROUP BY a.title ORDER BY a.registerTimeImg DESC limit 20");
+			// json字符串转数组
+			if(count($data['activeLately']) != 0){
+				for($a=0;$a<count($data['activeLately']);$a++){
+					$data['activeLately'][$a]['img'] = json_decode($data['activeLately'][$a]['img']);
+					$data['activeLately'][$a]['psd'] = json_decode($data['activeLately'][$a]['psd']);
+					$data['activeLately'][$a]['video'] = json_decode($data['activeLately'][$a]['video']);
+					$data['activeLately'][$a]['ai'] = json_decode($data['activeLately'][$a]['ai']);
+					$data['activeLately'][$a]['pdf'] = json_decode($data['activeLately'][$a]['pdf']);
+					$data['activeLately'][$a]['word'] = json_decode($data['activeLately'][$a]['word']);
+					$data['activeLately'][$a]['excel'] = json_decode($data['activeLately'][$a]['excel']);
+					$data['activeLately'][$a]['engineering'] = json_decode($data['activeLately'][$a]['engineering']);
+				}
+			}
+			
 			// 全年文章类型分布
 			for ($i=0; $i<=11; $i++) {
 				$data['activeTypeYear'][$i][0] = $year[$i]->y;
@@ -1229,9 +1245,14 @@ class AdminController extends ControllerController {
 				'title' 			=> I('post.title'),
 				'keyword' 			=> I('post.keyword'),
 				'describe' 			=> html_entity_decode(I('post.describe')),
-				'img' 				=> I('post.typeFile') == 'img' || 'video' ?  json_encode(I('post.img')) : '"[]"',
-				'psd' 				=> I('post.typeFile') == 'psd' ? json_encode(I('post.psd')) : '"[]"',
-				'video' 			=> I('post.typeFile') == 'video' ? json_encode(I('post.video')) : '"[]"',
+				'img' 				=> I('post.typeFile') == 'img' || 'video' || 'ai' || 'engineering' ? I('post.img') == '' ? '[]' : json_encode(I('post.img')) : '[]',
+				'psd' 				=> I('post.typeFile') == 'psd' ? json_encode(I('post.psd')) : '[]',
+				'video' 			=> I('post.typeFile') == 'video' ? json_encode(I('post.video')) : '[]',
+				'ai' 				=> I('post.typeFile') == 'ai' ? json_encode(I('post.ai')) : '[]',
+				'pdf' 				=> I('post.typeFile') == 'pdf' ? json_encode(I('post.pdf')) : '[]',
+				'word' 				=> I('post.typeFile') == 'word' ? json_encode(I('post.word')) : '[]',
+				'excel' 			=> I('post.typeFile') == 'excel' ? json_encode(I('post.excel')) : '[]',
+				'engineering' 		=> I('post.typeFile') == 'engineering' ? json_encode(I('post.engineering')) : '[]',
 				'compress' 			=> null,
 				'registerTimeImg' 	=> time(),
 				'endTimeImg' 		=> 0,
@@ -1397,6 +1418,19 @@ class AdminController extends ControllerController {
 			}
 			$articleAll=$this->tool->img_article->query($sqlNum);
 			$articleArrs=$this->tool->img_article->query($sql.' ORDER BY mId desc LIMIT '.($page - 1) * $articlePageNum.','.$articlePageNum);
+			
+			// json字符串转数组
+			for($a=0;$a<count($articleArrs);$a++){
+				$articleArrs[$a]['img'] = $articleArrs[$a]['img'] == '[]' ? [] : json_decode($articleArrs[$a]['img']);
+				$articleArrs[$a]['psd'] = $articleArrs[$a]['psd'] == '[]' ? [] : json_decode($articleArrs[$a]['psd']);
+				$articleArrs[$a]['video'] = $articleArrs[$a]['video'] == '[]' ? [] : json_decode($articleArrs[$a]['video']);
+				$articleArrs[$a]['ai'] = $articleArrs[$a]['ai'] == '[]' ? [] : json_decode($articleArrs[$a]['ai']);
+				$articleArrs[$a]['pdf'] = $articleArrs[$a]['pdf'] == '[]' ? [] : json_decode($articleArrs[$a]['pdf']);
+				$articleArrs[$a]['word'] = $articleArrs[$a]['word'] == '[]' ? [] : json_decode($articleArrs[$a]['word']);
+				$articleArrs[$a]['excel'] = $articleArrs[$a]['excel'] == '[]' ? [] : json_decode($articleArrs[$a]['excel']);
+				$articleArrs[$a]['engineering'] = $articleArrs[$a]['engineering'] == '[]' ? [] : json_decode($articleArrs[$a]['engineering']);
+			}
+			
 			if($articleArrs){
 				$this->ajaxReturn(['code'=>$this->tool->success,'data'=>['article' => $articleArrs, 'articleNum' => intval($articleAll[0]['num']), 'page' => $page ],'msg'=>$info,'status'=>$this->tool->img_article->getLastSql(),],'JSON');
 			}else{
@@ -1524,6 +1558,19 @@ class AdminController extends ControllerController {
 			}
 			$articleAll=$this->tool->img_article->query($sqlNum);
 			$articleArrs=$this->tool->img_article->query($sql.' ORDER BY mId desc LIMIT '.($page - 1) * $articlePageNum.','.$articlePageNum);
+			
+			// json字符串转数组
+			for($a=0;$a<count($articleArrs);$a++){
+				$articleArrs[$a]['img'] = json_decode($articleArrs[$a]['img']);
+				$articleArrs[$a]['psd'] = json_decode($articleArrs[$a]['psd']);
+				$articleArrs[$a]['video'] = json_decode($articleArrs[$a]['video']);
+				$articleArrs[$a]['ai'] = json_decode($articleArrs[$a]['ai']);
+				$articleArrs[$a]['pdf'] = json_decode($articleArrs[$a]['pdf']);
+				$articleArrs[$a]['word'] = json_decode($articleArrs[$a]['word']);
+				$articleArrs[$a]['excel'] = json_decode($articleArrs[$a]['excel']);
+				$articleArrs[$a]['engineering'] = json_decode($articleArrs[$a]['engineering']);
+			}
+			
 			// $sql = $this->tool->img_article->getLastSql();
 			if($articleArrs){
 				$this->ajaxReturn(['code'=>$this->tool->success,'data'=>['article' => $articleArrs, 'articleNum' => intval($articleAll[0]['num']), 'page' => $page ],'msg'=>$sql,'status'=>true,],'JSON');
@@ -1629,6 +1676,62 @@ class AdminController extends ControllerController {
 						}
 					}
 				}
+				
+				$jsonvideo=$adel['ai'];
+				$dfilevideo= json_decode($jsonvideo,true);
+				if(count($dfilevideo) != 0){
+					for($i=0;$i<count($dfilevideo);$i++){
+						$dfvideoimg=$dfilevideo[$i]['dataAi']['url'];
+						if($dfvideoimg!=''){
+							$videodel=unlink($dfvideoimg);
+						}
+					}
+				}
+				
+				$jsonvideo=$adel['pdf'];
+				$dfilevideo= json_decode($jsonvideo,true);
+				if(count($dfilevideo) != 0){
+					for($i=0;$i<count($dfilevideo);$i++){
+						$dfvideoimg=$dfilevideo[$i]['file']['url'];
+						if($dfvideoimg!=''){
+							$videodel=unlink($dfvideoimg);
+						}
+					}
+				}
+				
+				$jsonvideo=$adel['engineering'];
+				$dfilevideo= json_decode($jsonvideo,true);
+				if(count($dfilevideo) != 0){
+					for($i=0;$i<count($dfilevideo);$i++){
+						$dfvideoimg=$dfilevideo[$i]['file']['url'];
+						if($dfvideoimg!=''){
+							$videodel=unlink($dfvideoimg);
+						}
+					}
+				}
+				
+				$jsonvideo=$adel['word'];
+				$dfilevideo= json_decode($jsonvideo,true);
+				if(count($dfilevideo) != 0){
+					for($i=0;$i<count($dfilevideo);$i++){
+						$dfvideoimg=$dfilevideo[$i]['file']['url'];
+						if($dfvideoimg!=''){
+							$videodel=unlink($dfvideoimg);
+						}
+					}
+				}
+				
+				$jsonvideo=$adel['excel'];
+				$dfilevideo= json_decode($jsonvideo,true);
+				if(count($dfilevideo) != 0){
+					for($i=0;$i<count($dfilevideo);$i++){
+						$dfvideoimg=$dfilevideo[$i]['file']['url'];
+						if($dfvideoimg!=''){
+							$videodel=unlink($dfvideoimg);
+						}
+					}
+				}
+				
 				$rn = $this->tool->img_article->where($where)->delete();
 				if($rn){
 					$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'','msg'=>'删除成功','status'=>true,],'JSON');
@@ -1700,6 +1803,11 @@ class AdminController extends ControllerController {
 			$article['img'] = json_decode($article['img']);
 			$article['psd'] = json_decode($article['psd']);
 			$article['video'] = json_decode($article['video']);
+			$article['ai'] = json_decode($article['ai']);
+			$article['pdf'] = json_decode($article['pdf']);
+			$article['word'] = json_decode($article['word']);
+			$article['excel'] = json_decode($article['excel']);
+			$article['engineering'] = json_decode($article['engineering']);
 			$temp2 = [];
 			$project=$this->tool->img_project->where(['webShow' => 0])->select();
 			$types=$this->tool->img_type->where(['webShow' => 0])->select();
@@ -1755,18 +1863,23 @@ class AdminController extends ControllerController {
 	{
 		if(IS_POST){
 			$articleInfo = [
-				'mId' => I('post.mId'),
-				'uId' => I('post.uId'),
-				'pid' => I('post.pid'),
-				'tid' => I('post.tid'),
-				'did' => I('post.did'),
-				'title' => I('post.title'),
-				'keyword' => I('post.keyword'),
-				'describe' => html_entity_decode(I('post.describe')),
-				'img' => json_encode(I('post.img')),
-				'psd' => json_encode(I('post.psd')),
-				'video' => json_encode(I('post.video')),
-				'typeFile' => json_encode(I('post.typeFile')),
+				'mId' 		=> I('post.mId'),
+				'uId' 		=> I('post.uId'),
+				'pid' 		=> I('post.pid'),
+				'tid' 		=> I('post.tid'),
+				'did' 		=> I('post.did'),
+				'title' 	=> I('post.title'),
+				'keyword' 	=> I('post.keyword'),
+				'describe' 	=> html_entity_decode(I('post.describe')),
+				'img' 		=> I('post.img') != '' ? json_encode(I('post.img')) : [],
+				'psd' 		=> I('post.psd') != '' ? json_encode(I('post.psd')) : [],
+				'video' 	=> I('post.video') != '' ? json_encode(I('post.video')) : [],
+				'ai' 		=> I('post.ai') != '' ? json_encode(I('post.ai')) : [],
+				'pdf' 		=> I('post.pdf') != '' ? json_encode(I('post.pdf')) : [],
+				'word' 		=> I('post.word') != '' ? json_encode(I('post.word')) : [],
+				'excel' 	=> I('post.excel') != '' ? json_encode(I('post.excel')) : [],
+				'engineering' => I('post.engineering') != '' ? json_encode(I('post.engineering')) : [],
+				'typeFile' 	=> I('post.typeFile'),
 			];
 			$articleArr = $this->tool->img_article->where(['mId' => $articleInfo['mId']])->select();
 			if($articleArr)
@@ -1778,33 +1891,18 @@ class AdminController extends ControllerController {
 				$articleArr[0]['title'] = $articleInfo['title'];
 				$articleArr[0]['keyword'] = $articleInfo['keyword'];
 				$articleArr[0]['describe'] = $articleInfo['describe'];
-				$articleArr[0]['img']=$articleInfo['img'];
-				$articleArr[0]['psd']=$articleInfo['psd'];
-				$articleArr[0]['video']=$articleInfo['video'];
+				$articleArr[0]['img'] = $articleInfo['img'];
+				$articleArr[0]['psd'] = $articleInfo['psd'];
+				$articleArr[0]['video'] = $articleInfo['video'];
+				$articleArr[0]['ai'] = $articleInfo['ai'];
+				$articleArr[0]['pdf'] = $articleInfo['pdf'];
+				$articleArr[0]['word'] = $articleInfo['word'];
+				$articleArr[0]['excel'] = $articleInfo['excel'];
+				$articleArr[0]['engineering'] = $articleInfo['engineering'];
 				$articleArr[0]['endTimeImg'] = time();
-				if($articleInfo['img']!='"[]"'){
-					$articleArr[0]['img']=$articleInfo['img'];
-					$articleArr[0]['psd']='"[]"';
-					$articleArr[0]['video']='"[]"';
-					$articleArr[0]['typeFile']="img";
-				}
-				if($articleInfo['psd']!='"[]"'){
-					$articleArr[0]['img']='"[]"';
-					$articleArr[0]['psd']=$articleInfo['psd'];
-					$articleArr[0]['video']='"[]"';
-					$articleArr[0]['typeFile']="psd";
-				}
-				if($articleInfo['video']!='"[]"'){
-					if($articleInfo['img']!='"[]"'){
-						$articleArr[0]['img']=$articleInfo['img'];
-					}else{
-						$articleArr[0]['img']='"[]"';
-					}
-					$articleArr[0]['psd']='"[]"';
-					$articleArr[0]['video']=$articleInfo['video'];
-					$articleArr[0]['typeFile']="video";
-				}
+				
 				$n = $this->tool->img_article->where(['mId' => $articleInfo['mId']])->save($articleArr[0]);
+				
 				if ($n){
 					$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'','msg'=>'修改成功','status'=>true,],'JSON');
 				}else{
@@ -1845,6 +1943,18 @@ class AdminController extends ControllerController {
 				$rtn=$this->tool->img_users->where(['uId' => I("post.uId")])->save(['state' => 0]);
 				$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'','msg'=>'success','status'=>true,],'JSON');
 			}
+		} else {
+			$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
+		}
+	}
+	
+	/**
+	* 检查用户状态
+	*/
+	public function userState(){
+		if(IS_POST){
+			$rtn=$this->tool->img_users->where(['uId' => I("post.uId")])->find();
+			$this->ajaxReturn(['code'=>$this->tool->success,'data'=>$rtn,'msg'=>'success','status'=>true,],'JSON');
 		} else {
 			$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
 		}
