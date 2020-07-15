@@ -19,7 +19,7 @@ class UpfileController extends ControllerController {
 	{
 		$con=array(
 			"maxSize"	=>0,//文件大小
-			"exts"		=>array('jpg','gif','png','jpeg','psd','psb','ai','mp4','3gp','avi','rmvb','flv','wmv','mpeg','mov','mkv','flv','f4v','m4v','rm','dat','ts','mts','rar','zip','pdf'),//文件类型
+			"exts"		=>array('jpg','gif','png','jpeg','psd','psb','ai','mp4','3gp','avi','rmvb','flv','wmv','mpeg','mov','mkv','flv','f4v','m4v','rm','dat','ts','mts','rar','zip','pdf','doc','docx','xlsx','xls'),//文件类型
 			"autoSub"	=>false,
 			"rootPath"	=>"./",//根目录   等于项目名下
 			"savePath"	=>"file/img/".date("Y-m-d")."/",//路径，相对于项目名下
