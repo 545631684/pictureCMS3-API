@@ -927,6 +927,23 @@ class AdminController extends ControllerController {
 	}
 	
 	/**
+	 * 文件删除2
+	 */
+	public function delfile2()
+	{
+		if(IS_POST)
+		{
+			$filesrc = explode(',',I("post.filesrc"));
+			foreach($filesrc as $value){
+			 unlink($value);
+			}
+			$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'','msg'=>'删除成功','status'=>true,],'JSON');
+		} else {
+			$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
+		}
+	}
+	
+	/**
 	* 获取统计页面数据All
 	*/
 	public function getAdminStatisticsData () {
@@ -1097,6 +1114,7 @@ class AdminController extends ControllerController {
 		{
 			$user = $this->tool->img_users->where(['uId' => I("post.uId")])->select();
 			if ($user) {
+				// 计算当前用户回收站文章保留天数到期删除文章
 				$article = $this->tool->img_article->where(['state' => 2])->select();
 				for ($e=0; $e<count($article); $e++) {
 					$deleteTime = $article[$e]['retainTime'];
@@ -1172,8 +1190,43 @@ class AdminController extends ControllerController {
 						}
 					}
 				}
-				$articles = $this->tool->img_article->where(['uId' => I("post.uId"), 'state' => 2])->select();
-				$this->ajaxReturn(['code'=>$this->tool->success,'data'=>$articles,'msg'=>'success','status'=>true,],'JSON');
+				/*$allwz = $this->tool->img_article->select();
+				$typesss = [];
+				// json字符串转数组
+				for($a=0;$a<count($allwz);$a++){
+					$allwz[$a]['img'] == '[]' ? [] : $typesss[count($typesss)] = 'img';
+					$allwz[$a]['psd'] == '[]' ? [] : $typesss[count($typesss)] = 'psd';
+					$allwz[$a]['video'] == '[]' ? [] : $typesss[count($typesss)] = 'video';
+					$allwz[$a]['ai'] == '[]' ? [] : $typesss[count($typesss)] = 'ai';
+					$allwz[$a]['pdf'] == '[]' ? [] : $typesss[count($typesss)] = 'pdf';
+					$allwz[$a]['word'] == '[]' ? [] : $typesss[count($typesss)] = 'word';
+					$allwz[$a]['excel'] == '[]' ? [] : $typesss[count($typesss)] = 'excel';
+					$allwz[$a]['engineering'] == '[]' ? [] : $typesss[count($typesss)] = '压缩包';
+					$this->tool->img_article->where(['mId' => $allwz[$a]['mId']])->save(['typeFile' => join(",", $typesss)]);
+					$typesss = [];
+				}*/
+				
+				// 查询当前用户回收站文章
+				if($user[0]['permissions'] == '2'){
+					$articleArrs = $this->tool->img_article->where(['state' => 2])->select();
+				} else {
+					$articleArrs = $this->tool->img_article->where(['uId' => I("post.uId"), 'state' => 2])->select();
+				}
+				
+				// json字符串转数组
+				for($a=0;$a<count($articleArrs);$a++){
+					$nickname = $this->tool->img_users->field('nickname')->where(['uId' => $articleArrs[$a]['uId']])->find();
+					$articleArrs[$a]['nickname'] = $nickname['nickname'];
+					$articleArrs[$a]['img'] = $articleArrs[$a]['img'] == '[]' ? [] : json_decode($articleArrs[$a]['img']);
+					$articleArrs[$a]['psd'] = $articleArrs[$a]['psd'] == '[]' ? [] : json_decode($articleArrs[$a]['psd']);
+					$articleArrs[$a]['video'] = $articleArrs[$a]['video'] == '[]' ? [] : json_decode($articleArrs[$a]['video']);
+					$articleArrs[$a]['ai'] = $articleArrs[$a]['ai'] == '[]' ? [] : json_decode($articleArrs[$a]['ai']);
+					$articleArrs[$a]['pdf'] = $articleArrs[$a]['pdf'] == '[]' ? [] : json_decode($articleArrs[$a]['pdf']);
+					$articleArrs[$a]['word'] = $articleArrs[$a]['word'] == '[]' ? [] : json_decode($articleArrs[$a]['word']);
+					$articleArrs[$a]['excel'] = $articleArrs[$a]['excel'] == '[]' ? [] : json_decode($articleArrs[$a]['excel']);
+					$articleArrs[$a]['engineering'] = $articleArrs[$a]['engineering'] == '[]' ? [] : json_decode($articleArrs[$a]['engineering']);
+				}
+				$this->ajaxReturn(['code'=>$this->tool->success,'data'=>$articleArrs,'msg'=>'success','status'=>true,],'JSON');
 			} else {
 				$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误111','status'=>true,],'JSON');
 			}
@@ -1245,14 +1298,14 @@ class AdminController extends ControllerController {
 				'title' 			=> I('post.title'),
 				'keyword' 			=> I('post.keyword'),
 				'describe' 			=> html_entity_decode(I('post.describe')),
-				'img' 				=> I('post.typeFile') == 'img' || 'video' || 'ai' || 'engineering' ? I('post.img') == '' ? '[]' : json_encode(I('post.img')) : '[]',
-				'psd' 				=> I('post.typeFile') == 'psd' ? json_encode(I('post.psd')) : '[]',
-				'video' 			=> I('post.typeFile') == 'video' ? json_encode(I('post.video')) : '[]',
-				'ai' 				=> I('post.typeFile') == 'ai' ? json_encode(I('post.ai')) : '[]',
-				'pdf' 				=> I('post.typeFile') == 'pdf' ? json_encode(I('post.pdf')) : '[]',
-				'word' 				=> I('post.typeFile') == 'word' ? json_encode(I('post.word')) : '[]',
-				'excel' 			=> I('post.typeFile') == 'excel' ? json_encode(I('post.excel')) : '[]',
-				'engineering' 		=> I('post.typeFile') == 'engineering' ? json_encode(I('post.engineering')) : '[]',
+				'img' 				=> I('post.img') != '' ? json_encode(I('post.img')) : '[]',
+				'psd' 				=> I('post.psd') != '' ? json_encode(I('post.psd')) : '[]',
+				'video' 			=> I('post.video') != '' ? json_encode(I('post.video')) : '[]',
+				'ai' 				=> I('post.ai') != '' ? json_encode(I('post.ai')) : '[]',
+				'pdf' 				=> I('post.pdf') != '' ? json_encode(I('post.pdf')) : '[]',
+				'word' 				=> I('post.word') != '' ? json_encode(I('post.word')) : '[]',
+				'excel' 			=> I('post.excel') != '' ? json_encode(I('post.excel')) : '[]',
+				'engineering' 		=> I('post.engineering') != '' ? json_encode(I('post.engineering')) : '[]',
 				'compress' 			=> null,
 				'registerTimeImg' 	=> time(),
 				'endTimeImg' 		=> 0,
@@ -1442,6 +1495,143 @@ class AdminController extends ControllerController {
 	}
 	
 	/**
+	* 后台查看文章分页2
+	*/
+	public function getArticleAll2()
+	{
+		if(IS_POST){
+			if(strlen(I("post.page")) == 0 || strlen(I("post.articlePageNum")) == 0) $this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
+			$page = intval(I("post.page"));
+			$articlePageNum = intval(I("post.articlePageNum")) < 6 ? 6 : intval(I("post.articlePageNum"));
+			$project=$this->tool->img_project->where(['state' => 2])->select();
+			$types=$this->tool->img_type->where(['state' => 2])->select();
+			$details=$this->tool->img_details->where(['state' => 2])->select();
+			$userInfo = $this->tool->img_users->where(['uId' => I("post.userId")])->find();
+			$sqlNum = "SELECT count(*) num FROM img_article where state = 1";
+			$sql = "SELECT * FROM img_article where state = 1";
+			if(I("post.pid") != "") $info['projectid'] = I("post.pid");
+			if(I("post.tid") != "") $info['typeid'] = I("post.tid");
+			if(I("post.did") != "") $info['detailsid'] = I("post.did");
+			if(I("post.uid") != "") $info['uId'] = I("post.uid");
+			if(I("post.keyword") != "") $info['keyword']=I("post.keyword");
+			if(I("post.type") != "") $info['type']=I("post.type");
+			if($userInfo['permissions'] != 2){
+				if(count($project) != 0){
+					for($i=0;$i<count($project);$i++){
+						$info['shieldProjectid'][$i] = $project[$i]['pid'];
+					}
+				}
+				if(count($types) != 0){
+					for($j=0;$j<count($types);$j++){
+						$info['shieldTypeid'][$j] = $types[$j]['tid'];
+					}
+				}
+				if(count($details) != 0){
+					for($n=0;$n<count($details);$n++){
+						$info['shieldDetailsid'][$n] = $details[$n]['did'];
+					}
+				}
+				if($userInfo['shieldInfo'] != null){
+					$userInfo['shieldInfo'] = json_decode($userInfo['shieldInfo'], true);
+					for($s=0;$s<count($userInfo['shieldInfo']);$s++){
+						if($userInfo['shieldInfo'][$s]['state'] == '1'){
+							if($info['shieldPid'] == null) $info['shieldPid'] = [];
+							$info['shieldPid'][count($info['shieldPid'])] = $userInfo['shieldInfo'][$s]['pid'];
+						} else if($userInfo['shieldInfo'][$s]['state'] == '0'){
+							$info['shieldTid'][0] = $userInfo['shieldInfo'][$s]['pid'];
+							for($b=0;$b<count($userInfo['shieldInfo'][$s]['type']);$b++){
+								if($userInfo['shieldInfo'][$s]['type'][$b]['state'] == '1'){
+									$info['shieldTid'][1] =$userInfo['shieldInfo'][$s]['type'][$b]['tid'];
+								}
+							}
+						}
+					}
+				}
+			}
+			
+			foreach ($info as $key=>$value)
+			{
+				if($key=='projectid'){
+					$sql = $sql.' and '.'projectid = '.$value;
+					$sqlNum = $sqlNum.' and '.'projectid = '.$value;
+				} else if($key=='typeid'){
+					$sql = $sql.' and '.'typeid = '.$value;
+					$sqlNum = $sqlNum.' and '.'typeid = '.$value;
+				} else if($key=='detailsid'){
+					$sql = $sql.' and '.'detailsid = '.$value;
+					$sqlNum = $sqlNum.' and '.'detailsid = '.$value;
+				} else if($key=='uId'){
+					$sql = $sql.' and '.'uId = '.$value;
+					$sqlNum = $sqlNum.' and '.'uId = '.$value;
+				} else if($key=='shieldPid'){
+					$temp = "";
+					for($i=0;$i<count($value);$i++){
+						$temp = $temp.'projectid <> '.$value[$i].' and ';
+					}
+					$sql = $sql.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+					$sqlNum = $sqlNum.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+				} else if($key=='shieldTid'){
+					$temp = 'projectid <> '.$value[0].' and ';
+					for($j=0;$j<count($value[1]);$j++){
+						$temp = $temp.'typeid <> '.$value[1][$j].' and ';
+					}
+					$sql = $sql.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+					$sqlNum = $sqlNum.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+				} else if($key=='shieldProjectid'){
+					$temp = "";
+					for($w=0;$w<count($value);$w++){
+						$temp = $temp.'projectid <> '.$value[$w].' and ';
+					}
+					$sql = $sql.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+					$sqlNum = $sqlNum.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+				} else if($key=='shieldTypeid'){
+					$temp = "";
+					for($e=0;$e<count($value);$e++){
+						$temp = $temp.'typeid <> '.$value[$e].' and ';
+					}
+					$sql = $sql.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+					$sqlNum = $sqlNum.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+				} else if($key=='shieldDetailsid'){
+					$temp = "";
+					for($r=0;$r<count($value);$r++){
+						$temp = $temp.'detailsid <> '.$value[$r].' and ';
+					}
+					$sql = $sql.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+					$sqlNum = $sqlNum.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+				} else if($key=='keyword'){
+					$sql = $sql." and ( `title` LIKE '%".$value."%' OR `keyword` LIKE '%".$value."%' OR `describe` LIKE '%".$value."%' )";
+					$sqlNum = $sqlNum." and ( `title` LIKE '%".$value."%' OR `keyword` LIKE '%".$value."%' OR `describe` LIKE '%".$value."%' )";
+				} else if($key=='type'){
+					$sql = $sql." and ( `typeFile` LIKE '%".$value."%' )";
+					$sqlNum = $sqlNum." and ( `typeFile` LIKE '%".$value."%' )";
+				}
+			}
+			$articleAll=$this->tool->img_article->query($sqlNum);
+			$articleArrs=$this->tool->img_article->query($sql.' ORDER BY mId desc LIMIT '.($page - 1) * $articlePageNum.','.$articlePageNum);
+			
+			// json字符串转数组
+			for($a=0;$a<count($articleArrs);$a++){
+				$articleArrs[$a]['img'] = $articleArrs[$a]['img'] == '[]' ? [] : json_decode($articleArrs[$a]['img']);
+				$articleArrs[$a]['psd'] = $articleArrs[$a]['psd'] == '[]' ? [] : json_decode($articleArrs[$a]['psd']);
+				$articleArrs[$a]['video'] = $articleArrs[$a]['video'] == '[]' ? [] : json_decode($articleArrs[$a]['video']);
+				$articleArrs[$a]['ai'] = $articleArrs[$a]['ai'] == '[]' ? [] : json_decode($articleArrs[$a]['ai']);
+				$articleArrs[$a]['pdf'] = $articleArrs[$a]['pdf'] == '[]' ? [] : json_decode($articleArrs[$a]['pdf']);
+				$articleArrs[$a]['word'] = $articleArrs[$a]['word'] == '[]' ? [] : json_decode($articleArrs[$a]['word']);
+				$articleArrs[$a]['excel'] = $articleArrs[$a]['excel'] == '[]' ? [] : json_decode($articleArrs[$a]['excel']);
+				$articleArrs[$a]['engineering'] = $articleArrs[$a]['engineering'] == '[]' ? [] : json_decode($articleArrs[$a]['engineering']);
+			}
+			
+			if($articleArrs){
+				$this->ajaxReturn(['code'=>$this->tool->success,'data'=>['article' => $articleArrs, 'articleNum' => intval($articleAll[0]['num']), 'page' => $page ],'msg'=>$info,'status'=>$this->tool->img_article->getLastSql(),],'JSON');
+			}else{
+				$this->ajaxReturn(['code'=>$this->tool->success,'data'=>['article' => [], 'articleNum' => 0],'msg'=>$sqlNum,'status'=>$this->tool->img_article->getLastSql(),],'JSON');
+			}
+		} else {
+			$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
+		}
+	}
+	
+	/**
 	* 前台查看文章分页
 	*/
 	public function getWebArticleAll()
@@ -1461,6 +1651,7 @@ class AdminController extends ControllerController {
 			if(I("post.did") != "") $info['detailsid'] = I("post.did");
 			if(I("post.uid") != "") $info['uId'] = I("post.uid");
 			if(I("post.keyword") != "") $info['keyword']=I("post.keyword");
+			if(I("post.type") != "") $info['type']=I("post.type");
 			if($userInfo['permissions'] != 2){
 				if(count($project) != 0){
 					for($i=0;$i<count($project);$i++){
@@ -1549,6 +1740,9 @@ class AdminController extends ControllerController {
 					}
 					$sql = $sql.' and ( '.substr($temp,0,strlen($temp)-5).' )';
 					$sqlNum = $sqlNum.' and ( '.substr($temp,0,strlen($temp)-5).' )';
+				} else if($key=='type'){
+					$sql = $sql." and ( `typeFile` LIKE '%".$value."%' )";
+					$sqlNum = $sqlNum." and ( `typeFile` LIKE '%".$value."%' )";
 				}
 			}
 			if($userInfo['permissions'] == 4){
@@ -1780,6 +1974,17 @@ class AdminController extends ControllerController {
 			$articleArrs[0]['xname'] = $xname[0]['xname'];
 			$articleArrs[0]['lname'] = $lname[0]['lname'];
 			$articleArrs[0]['dname'] = $dname[0]['dname'];
+			// json字符串转数组
+			for($a=0;$a<count($articleArrs);$a++){
+				$articleArrs[$a]['img'] = $articleArrs[$a]['img'] == '[]' ? [] : json_decode($articleArrs[$a]['img']);
+				$articleArrs[$a]['psd'] = $articleArrs[$a]['psd'] == '[]' ? [] : json_decode($articleArrs[$a]['psd']);
+				$articleArrs[$a]['video'] = $articleArrs[$a]['video'] == '[]' ? [] : json_decode($articleArrs[$a]['video']);
+				$articleArrs[$a]['ai'] = $articleArrs[$a]['ai'] == '[]' ? [] : json_decode($articleArrs[$a]['ai']);
+				$articleArrs[$a]['pdf'] = $articleArrs[$a]['pdf'] == '[]' ? [] : json_decode($articleArrs[$a]['pdf']);
+				$articleArrs[$a]['word'] = $articleArrs[$a]['word'] == '[]' ? [] : json_decode($articleArrs[$a]['word']);
+				$articleArrs[$a]['excel'] = $articleArrs[$a]['excel'] == '[]' ? [] : json_decode($articleArrs[$a]['excel']);
+				$articleArrs[$a]['engineering'] = $articleArrs[$a]['engineering'] == '[]' ? [] : json_decode($articleArrs[$a]['engineering']);
+			}
 			if($articleArrs){
 				$this->ajaxReturn(['code'=>$this->tool->success,'data'=>$articleArrs[0],'msg'=>$this->tool->img_article->getLastSql(),'status'=>true,],'JSON');
 			}else{

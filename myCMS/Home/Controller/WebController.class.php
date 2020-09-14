@@ -56,7 +56,7 @@ class WebController extends ControllerController {
 								'adminNavigation'	=> '1',
 								'isCollapse'		=> false,
 								'judgeLogin'		=> $userArr['judgeLogin'],
-								'articlePageNum'	=> 5,
+								'articlePageNum'	=> 6,
 								'pageNum'			=> ceil($articleNum / 5),
 								'articleAll'		=> intval($articleNum),
 								'shieldInfo'		=> $userArr['shieldInfo'] != null ? json_decode($userArr['shieldInfo']) : "{}",
@@ -572,8 +572,8 @@ class WebController extends ControllerController {
 					}
 					break;
 				case '31':
-					$data['contentText'] = "修改文章【".$data['content_article']['start']['title']."】";
-					$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]修改文章【".$data['content_article']['start']['title']."】";
+					$data['contentText'] = "发布文章【".$data['content_article']['start']['title']."】";
+					$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]发布文章【".$data['content_article']['start']['title']."】";
 					break;
 				case '32':
 					$userInfo2 = $this->tool->img_users->where(['uId' => $data["content_user"]['uId']])->find();
