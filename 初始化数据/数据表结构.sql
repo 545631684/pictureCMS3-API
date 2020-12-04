@@ -10,7 +10,7 @@ Target Server Type    : MYSQL
 Target Server Version : 50617
 File Encoding         : 65001
 
-Date: 2020-05-04 17:02:22
+Date: 2020-07-24 17:37:58
 */
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -32,6 +32,11 @@ CREATE TABLE `img_article` (
   `img` longtext COMMENT '图片json数据',
   `psd` longtext COMMENT 'psd文件json数据',
   `video` longtext COMMENT '视频json数据',
+  `ai` longtext COMMENT 'ai文件josn数据',
+  `pdf` longtext COMMENT 'pd文件josn数据',
+  `word` longtext COMMENT 'word文档json数据',
+  `excel` longtext COMMENT 'excel表格json数据',
+  `engineering` longtext COMMENT 'engineering工程文件josn数据',
   `compress` varchar(255) DEFAULT NULL COMMENT '压缩包文件地址',
   `registerTimeImg` int(11) DEFAULT '0' COMMENT '创建时间',
   `endTimeImg` int(11) DEFAULT '0' COMMENT '最后一次修改时间',
@@ -39,7 +44,7 @@ CREATE TABLE `img_article` (
   `click` int(11) NOT NULL DEFAULT '0' COMMENT '点击数',
   `state` int(11) DEFAULT NULL COMMENT '状态值：1正常，2禁用',
   PRIMARY KEY (`mId`)
-) ENGINE=MyISAM AUTO_INCREMENT=5725 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=7445 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for img_auth_group
@@ -71,7 +76,20 @@ CREATE TABLE `img_auth_rule_copy` (
   `checkedCities` longtext COMMENT '选中的子功能页',
   `state` tinyint(1) NOT NULL DEFAULT '1' COMMENT '状态值：1正常，2禁用',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8;
+
+-- ----------------------------
+-- Table structure for img_browse_web_info
+-- ----------------------------
+DROP TABLE IF EXISTS `img_browse_web_info`;
+CREATE TABLE `img_browse_web_info` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '编号',
+  `uId` varchar(255) NOT NULL COMMENT '用户id',
+  `sameDay` varchar(255) NOT NULL COMMENT '当天字符串日期',
+  `mId` varchar(255) DEFAULT NULL COMMENT '文章id',
+  `time` int(11) NOT NULL COMMENT '当前时间戳',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=19803 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for img_collect
@@ -97,7 +115,7 @@ CREATE TABLE `img_details` (
   `state` int(11) NOT NULL COMMENT '状态值：1正常，2禁用',
   `webShow` int(11) NOT NULL COMMENT '前台显示开关：0关，1开',
   PRIMARY KEY (`did`)
-) ENGINE=InnoDB AUTO_INCREMENT=374 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=377 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for img_group_label
@@ -124,7 +142,7 @@ CREATE TABLE `img_information` (
   `created` int(11) NOT NULL COMMENT '操作时间',
   `state` int(11) NOT NULL COMMENT '状态值：1正常，2禁用',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1347 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=2205 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for img_label
@@ -160,7 +178,7 @@ CREATE TABLE `img_operationinfo` (
   `content_auth_group` longtext COMMENT '操作内容：用户组',
   `content_article` longtext COMMENT '操作内容：文章',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1984 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=5194 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Table structure for img_project
@@ -208,4 +226,4 @@ CREATE TABLE `img_users` (
   `judgeLogin` varchar(255) DEFAULT '0' COMMENT '是否登录， 0退出，1登录',
   `shieldInfo` longtext COMMENT '屏蔽的项目和类型',
   PRIMARY KEY (`uId`)
-) ENGINE=MyISAM AUTO_INCREMENT=52 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=57 DEFAULT CHARSET=utf8;

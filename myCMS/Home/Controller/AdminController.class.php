@@ -958,7 +958,7 @@ class AdminController extends ControllerController {
 		$beginThismonth=mktime(0,0,0,date('m'),1,date('Y'));
 		// 获取当前月结束的时间戳
 		$endThismonth=mktime(23,59,59,date('m'),date('t'),date('Y'));
-		if ($data['temp'][0]['permissions'] == 2) {
+		if ($data['temp'][0]['permissions'] == 2 || 5) {
 			$data['m'] = $month;
 			// 下载总数
 			$data['activeDownloadAll'] = $this->tool->img_information->where('1=1')->count();
@@ -2076,14 +2076,14 @@ class AdminController extends ControllerController {
 				'title' 	=> I('post.title'),
 				'keyword' 	=> I('post.keyword'),
 				'describe' 	=> html_entity_decode(I('post.describe')),
-				'img' 		=> I('post.img') != '' ? json_encode(I('post.img')) : [],
-				'psd' 		=> I('post.psd') != '' ? json_encode(I('post.psd')) : [],
-				'video' 	=> I('post.video') != '' ? json_encode(I('post.video')) : [],
-				'ai' 		=> I('post.ai') != '' ? json_encode(I('post.ai')) : [],
-				'pdf' 		=> I('post.pdf') != '' ? json_encode(I('post.pdf')) : [],
-				'word' 		=> I('post.word') != '' ? json_encode(I('post.word')) : [],
-				'excel' 	=> I('post.excel') != '' ? json_encode(I('post.excel')) : [],
-				'engineering' => I('post.engineering') != '' ? json_encode(I('post.engineering')) : [],
+				'img' 		=> I('post.img') != '' ? json_encode(I('post.img')) : '[]',
+				'psd' 		=> I('post.psd') != '' ? json_encode(I('post.psd')) : '[]',
+				'video' 	=> I('post.video') != '' ? json_encode(I('post.video')) : '[]',
+				'ai' 		=> I('post.ai') != '' ? json_encode(I('post.ai')) : '[]',
+				'pdf' 		=> I('post.pdf') != '' ? json_encode(I('post.pdf')) : '[]',
+				'word' 		=> I('post.word') != '' ? json_encode(I('post.word')) : '[]',
+				'excel' 	=> I('post.excel') != '' ? json_encode(I('post.excel')) : '[]',
+				'engineering' => I('post.engineering') != '' ? json_encode(I('post.engineering')) : '[]',
 				'typeFile' 	=> I('post.typeFile'),
 			];
 			$articleArr = $this->tool->img_article->where(['mId' => $articleInfo['mId']])->select();
@@ -2094,6 +2094,7 @@ class AdminController extends ControllerController {
 				$articleArr[0]['projectid'] = $articleInfo['pid'];
 				$articleArr[0]['detailsid'] = $articleInfo['did'];
 				$articleArr[0]['title'] = $articleInfo['title'];
+				$articleArr[0]['typeFile'] = $articleInfo['typeFile'];
 				$articleArr[0]['keyword'] = $articleInfo['keyword'];
 				$articleArr[0]['describe'] = $articleInfo['describe'];
 				$articleArr[0]['img'] = $articleInfo['img'];
@@ -2109,7 +2110,7 @@ class AdminController extends ControllerController {
 				$n = $this->tool->img_article->where(['mId' => $articleInfo['mId']])->save($articleArr[0]);
 				
 				if ($n){
-					$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'','msg'=>'修改成功','status'=>true,],'JSON');
+					$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'','msg'=>'修改成功','status'=>$this->tool->img_article->getLastSql(),],'JSON');
 				}else{
 					$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'修改失败','status'=>true,],'JSON');
 				}
