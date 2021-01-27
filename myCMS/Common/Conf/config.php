@@ -84,6 +84,14 @@ return array(
 		'a/setUserBrowseArticle'	=> 	'home/admin/setUserBrowseArticle',
 		'a/getUserBrowseWebInfo'	=> 	'home/admin/getUserBrowseWebInfo',
 		'a/userState'				=> 	'home/admin/userState',
+		'a/getArticleSubsection'	=> 	'home/admin/getArticleSubsection',
+		'a/getArticleUserSubsection'=> 	'home/admin/getArticleUserSubsection',
+		'a/getArticleUserDownload'	=> 	'home/admin/getArticleUserDownload',
+		'a/getArticleProject'		=> 	'home/admin/getArticleProject',
+		'a/servicePrivacyTypeAdd'	=> 	'home/admin/servicePrivacyTypeAdd',
+		'a/privacyTypeSave'			=> 	'home/admin/privacyTypeSave',
+		'a/privacyTypeDel'			=> 	'home/admin/privacyTypeDel',
+		'a/getArticleLabel'			=> 	'home/admin/getArticleLabel',
 		/******************* 后台接口end *************************/
 		
 		/******************* 前台接口begin ***********************/

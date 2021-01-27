@@ -25,6 +25,7 @@ class WebController extends ControllerController {
 			$detailsArr = $this->tool->getPublicInfo('details', $this->tool->img_details->where('1 = 1')->select());
 			$groupLabelArr=$this->tool->img_group_label->where('1 = 1')->select();
 			$labelArr=$this->tool->img_label->where('1 = 1')->select();
+			$privacyTypes=$this->tool->img_privacy_type->where('1 = 1')->select();
 			$authgroupArr = $this->tool->img_auth_group->where(['id' => $userArr['permissions']])->select();
 			$userRecovery = $this->tool->img_auth_group->where('1 = 1')->select();
 			$authgroupArr[0]['rules']=json_decode($authgroupArr[0]['rules']);
@@ -67,6 +68,7 @@ class WebController extends ControllerController {
 								'details'			=> $detailsArr ? $detailsArr : "[]",
 								'groupLabel'		=> $groupLabelArr ? $groupLabelArr : "[]",
 								'label'				=> $labelArr ? $labelArr : "[]",
+								'privacyTypes'		=> $privacyTypes ? $privacyTypes : "[]",
 								'userRecovery'		=> $userRecovery ? $userRecovery : "[]",
 								'srcUrl'			=> $this->tool->src_url,
 							],
@@ -314,7 +316,8 @@ class WebController extends ControllerController {
 				"content_classification"	=> I("post.content_classification")!=""?I("post.content_classification"):"{}",
 				"content_group_label"		=> I("post.content_group_label")!=""?I("post.content_group_label"):"{}",
 				"content_label"				=> I("post.content_label")!=""?I("post.content_label"):"{}",
-				"content_article_type"		=> I("post.content_article_type")!=""?I("post.content_article_type"):"{}"
+				"content_article_type"		=> I("post.content_article_type")!=""?I("post.content_article_type"):"{}",
+				"content_privacy_type"		=> I("post.content_privacy_type")!=""?I("post.content_privacy_type"):"{}"
 			];
 			$userInfo = $this->tool->img_users->where(['uId' => $data["uId"]])->find();
 			$userAuthGroupInfo = $this->tool->img_auth_group->where(['id' => $userInfo["permissions"]])->find();
@@ -592,6 +595,39 @@ class WebController extends ControllerController {
 					$data['contentText'] = "屏蔽用户[".$userInfo2['nickname']."<".$userAuthGroupInfo2['title'].'>]查看项目['.$data['content_type'][0]['xname'].']的类型:【'.$typeName.'】';
 					$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]屏蔽用户[".$userInfo2['nickname']."<".$userAuthGroupInfo2['title'].'>]查看项目['.$data['content_type'][0]['xname'].']的类型:【'.$typeName.'】';
 					break;
+				case '34':
+					$userInfo2 = $this->tool->img_users->where(['uId' => $data["content_user"]['uId']])->find();
+					$userAuthGroupInfo2 = $this->tool->img_auth_group->where(['id' => $userInfo2["permissions"]])->find();	
+					for($i = 0;$i<=count($data['content_type'][0]['type']);$i++){
+						if($data['content_type'][0]['tid'] == $data['content_type'][0]['type'][$i]['tid'] && $data['content_type'][0]['type'][$i]['state'] == '1'){
+							$typeName = $data['content_type'][0]['type'][$i]['lname'];
+						}
+					}
+					$data['contentText'] = "添加隐私分类【".$data['content_privacy_type']['start']['privacyTypeName']['name']."】，绑定用户：".$data['content_privacy_type']['start']['userName']['name']."，绑定用户组：".$data['content_privacy_type']['start']['userGroupName']['name'];
+					$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]添加隐私分类【".$data['content_privacy_type']['start']['privacyTypeName']['name']."】，绑定用户：".$data['content_privacy_type']['start']['userName']['name']."，绑定用户组：".$data['content_privacy_type']['start']['userGroupName']['name'];
+					break;
+				case '35':
+					$userInfo2 = $this->tool->img_users->where(['uId' => $data["content_user"]['uId']])->find();
+					$userAuthGroupInfo2 = $this->tool->img_auth_group->where(['id' => $userInfo2["permissions"]])->find();	
+					for($i = 0;$i<=count($data['content_type'][0]['type']);$i++){
+						if($data['content_type'][0]['tid'] == $data['content_type'][0]['type'][$i]['tid'] && $data['content_type'][0]['type'][$i]['state'] == '1'){
+							$typeName = $data['content_type'][0]['type'][$i]['lname'];
+						}
+					}
+					$data['contentText'] = "编辑隐私分类【".$data['content_privacy_type']['start']['privacyTypeName']['name']."】，绑定用户：（原）".$data['content_privacy_type']['start']['userName']['name']."=>".$data['content_privacy_type']['end']['userName']['name']."（改）,绑定用户组：（原）".$data['content_privacy_type']['start']['userGroupName']['name']."=>".$data['content_privacy_type']['end']['userGroupName']['name']."（改）";
+					$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]编辑隐私分类【".$data['content_privacy_type']['start']['privacyTypeName']['name']."】，绑定用户：（原）".$data['content_privacy_type']['start']['userName']['name']."=>".$data['content_privacy_type']['end']['userName']['name']."（改）,绑定用户组：（原）".$data['content_privacy_type']['start']['userGroupName']['name']."=>".$data['content_privacy_type']['end']['userGroupName']['name']."（改）";
+					break;
+				case '36':
+					$userInfo2 = $this->tool->img_users->where(['uId' => $data["content_user"]['uId']])->find();
+					$userAuthGroupInfo2 = $this->tool->img_auth_group->where(['id' => $userInfo2["permissions"]])->find();	
+					for($i = 0;$i<=count($data['content_type'][0]['type']);$i++){
+						if($data['content_type'][0]['tid'] == $data['content_type'][0]['type'][$i]['tid'] && $data['content_type'][0]['type'][$i]['state'] == '1'){
+							$typeName = $data['content_type'][0]['type'][$i]['lname'];
+						}
+					}
+					$data['contentText'] = "删除隐私分类【".$data['content_privacy_type']['start']['privacyTypeName']['name']."】，绑定用户：".$data['content_privacy_type']['start']['userName']['name'].",绑定用户组：".$data['content_privacy_type']['start']['userGroupName']['name'];
+					$data['content_groupText'] = $userInfo['nickname']."[".$userAuthGroupInfo['title']."]删除隐私分类【".$data['content_privacy_type']['start']['privacyTypeName']['name']."】，绑定用户：".$data['content_privacy_type']['start']['userName']['name'].",绑定用户组：".$data['content_privacy_type']['start']['userGroupName']['name'];
+					break;
 			}
 			$data = [
 				"uId" 						=> $data['uId'],
@@ -607,7 +643,8 @@ class WebController extends ControllerController {
 				"content_classification"	=> json_encode($data['content_classification']),
 				"content_group_label"		=> json_encode($data['content_group_label']),
 				"content_label"				=> json_encode($data['content_label']),
-				"content_article_type"		=> json_encode($data['content_article_type'])
+				"content_article_type"		=> json_encode($data['content_article_type']),
+				"content_privacy_type"		=> json_encode($data['content_privacy_type'])
 			];
 			
 			if($data['type'] == '2' || $data['type'] == '30'){

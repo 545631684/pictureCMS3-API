@@ -22,6 +22,7 @@ return array(
 	'IMG_USERS'				=> 'users',// 用户表
 	'IMG_OPERATIONINFO'		=> 'operationinfo',// 用户操作记录表
 	'IMG_BROWSE_WEB_INFO'	=> 'browse_web_info',// 用户浏览记录表
+	'IMG_PRIVACY_TYPE'		=> 'privacy_type',// 文章分类隐私绑定表
 	/* 接口状态码 */
 	'SUCCESS'				=> 200,// 成功	
 	'FAIL'					=> -4000,// 失败	

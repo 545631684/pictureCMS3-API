@@ -172,6 +172,124 @@ class AdminController extends ControllerController {
 	}
 	
 	/**
+	* 获取项目、类型、分类、标签组、标签的数据
+	*/
+	public function getPublicInfo(){
+		if (IS_POST) {
+			if(stripos(I('post.types'),'user')){
+				$users = $this->tool->img_users->select();
+			}
+			if(stripos(I('post.types'),'projects')){
+				$projects = $this->tool->getPublicInfo('project', $this->tool->img_project->where('1 = 1')->select());
+			}
+			if(stripos(I('post.types'),'types')){
+				$types = $this->tool->getPublicInfo('type', $this->tool->img_type->where('1 = 1')->select());
+			}
+			if(stripos(I('post.types'),'details')){
+				$details = $this->tool->getPublicInfo('details', $this->tool->img_details->where('1 = 1')->select());
+			}
+			if(stripos(I('post.types'),'groupLabel')){
+				$groupLabel = $this->tool->getPublicInfo('groupLabel', $this->tool->img_group_label->where('1 = 1')->select());
+			}
+			if(stripos(I('post.types'),'label')){
+				$label = $this->tool->getPublicInfo('label', $this->tool->img_label->where('1 = 1')->select());
+			}
+			if(stripos(I('post.types'),'privacyType')){
+				$privacyType = $this->tool->getPublicInfo('privacyType', $this->tool->img_privacy_type->where('1 = 1')->select());
+			}
+			if(stripos(I('post.types'),'authGroup')){
+				$authGroup = $this->tool->img_auth_group->field('id,title,state')->where('1 = 1')->select();
+			}
+			$srcUrl = $this->tool->src_url;
+			$data = [
+				'users' 		=> $users ? $users : [],
+				'projects' 		=> $projects ? $projects : [],
+				'types' 		=> $types ? $types : [],
+				'details' 		=> $details ? $details : [],
+				'groupLabel' 	=> $groupLabel ? $groupLabel : [],
+				'label' 		=> $label ? $label : [],
+				'privacyType' 	=> $privacyType ? $privacyType : [],
+				'authGroup' 	=> $authGroup ? $authGroup : [],
+				'srcUrl' 		=> $srcUrl,
+			];
+			
+			$this->ajaxReturn(['code'=>$this->tool->success,'data'=>$data,'msg'=>'获取成功','status'=>true,],'JSON');
+		} else {
+			$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
+		}
+	}
+	
+	/**
+	* 添加隐私分类
+	*/
+	public function servicePrivacyTypeAdd(){
+		if (IS_POST) {
+			if(I('post.tid') != '' && I('post.state') != '' && I('post.uid') != '' || I('post.qroupid') != ''){
+				if(I('post.uid') == ''){
+					$rtn=$this->tool->img_privacy_type->add(['tid' => I('post.tid'), 'authGroup' => I('post.qroupid'), 'state' => I('post.state')]);
+				} else if(I('post.qroupid') == ''){
+					$rtn=$this->tool->img_privacy_type->add(['tid' => I('post.tid'), 'users' => I('post.uid'), 'state' => I('post.state')]);
+				} else if(I('post.qroupid') != '' && I('post.uid') != ''){
+					$rtn=$this->tool->img_privacy_type->add(['tid' => I('post.tid'), 'users' => I('post.uid'), 'authGroup' => I('post.qroupid'), 'state' => I('post.state')]);
+				}
+				
+				if($rtn){
+					$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'','msg'=>'添加成功','status'=>true,],'JSON');
+				}else{
+					$this->ajaxReturn(['code'=>$this->tool->fail,'data'=>'','msg'=>'添加失败','status'=>true,],'JSON');
+				}
+			} else {
+				$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
+			}
+			
+		} else {
+			$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
+		}
+	}
+	
+	/**
+	* 编辑隐私分类
+	*/
+	public function privacyTypeSave(){
+		if (IS_POST) {
+			$temp=$this->tool->img_privacy_type->where(['id' => I('post.id')])->select();
+			if (!$temp || count($temp)==1 && $temp[0]['id']==I('post.id')) {
+				if(I('post.uid') == ''){
+					$rtn=$this->tool->img_privacy_type->where(['id' => I('post.id')])->save(['tid' => I('post.tid'), 'users' => null, 'authGroup' => I('post.qroupid'), 'state' => I('post.state')]);
+				} else if(I('post.qroupid') == ''){
+					$rtn=$this->tool->img_privacy_type->where(['id' => I('post.id')])->save(['tid' => I('post.tid'), 'users' => I('post.uid'), 'authGroup' => null, 'state' => I('post.state')]);
+				} else if(I('post.qroupid') != '' && I('post.uid') != ''){
+					$rtn=$this->tool->img_privacy_type->where(['id' => I('post.id')])->save(['tid' => I('post.tid'), 'users' => I('post.uid'), 'authGroup' => I('post.qroupid'), 'state' => I('post.state')]);
+				}
+				
+				if($rtn == true){
+					$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'','msg'=>'编辑成功','status'=>true,],'JSON');
+				}else if ($rtn == false){
+					$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'编辑失败','status'=>$this->tool->img_privacy_type->getLastSql(),],'JSON');
+				}
+			}
+		}else{
+			$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
+		}
+	}
+
+	/**
+	* 删除隐私分类
+	*/
+	public function privacyTypeDel(){
+		if (IS_POST) {
+			$rtn = $this->tool->img_privacy_type->where(['id' => I("post.id")])->delete();
+			if ($rtn) {
+				$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'','msg'=>'删除成功','status'=>true,],'JSON');
+			}else{
+				$this->ajaxReturn(['code'=>$this->tool->fail,'data'=>'','msg'=>'删除失败','status'=>true,],'JSON');
+			}
+		} else {
+			$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
+		}
+	}
+	
+	/**
 	* 添加项目
 	*/
 	public function projectAdd(){
@@ -338,31 +456,6 @@ class AdminController extends ControllerController {
 	}
 	
 	/**
-	* 获取项目、类型、分类、标签组、标签的数据
-	*/
-	public function getPublicInfo(){
-		$userArr = $this->tool->img_users->where('1 = 1')->select();
-		$projectArr = $this->tool->getPublicInfo('project', $this->tool->img_project->where('1 = 1')->select());
-		$typeArr = $this->tool->getPublicInfo('type', $this->tool->img_type->where('1 = 1')->select());
-		$detailsArr = $this->tool->getPublicInfo('details', $this->tool->img_details->where('1 = 1')->select());
-		$groupLabelArr=$this->tool->getPublicInfo('groupLabel', $this->tool->img_group_label->where('1 = 1')->select());
-		$labelArr=$this->tool->getPublicInfo('label', $this->tool->img_label->where('1 = 1')->select());
-		if($projectArr){
-			$this->ajaxReturn(['code'=>$this->tool->success,'data'=>[
-				'projects' 		=> $projectArr  ? $projectArr : "[]",
-				'types' 		=> $typeArr  ? $typeArr : "[]",
-				'details' 		=> $detailsArr  ? $detailsArr : "[]",
-				'groupLabel' 	=> $groupLabelArr  ? $groupLabelArr : "[]",
-				'label' 		=> $labelArr  ? $labelArr : "[]",
-				'srcUrl'		=> $this->tool->src_url,
-				'users'			=> $userArr ? $userArr : "[]"
-			],'msg'=>'获取成功','status'=>true,],'JSON');
-		}else{
-			$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'','msg'=>'获取失败','status'=>true,],'JSON');
-		}
-	}
-	
-	/**
 	* 编辑类型
 	*/
 	public function typesave(){
@@ -474,12 +567,20 @@ class AdminController extends ControllerController {
 	*/
 	public function detailsDel(){
 		if (IS_POST) {
-			$rtn = $this->tool->img_details->where(['did' => I("post.did")])->delete();
-			if ($rtn) {
-				$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'','msg'=>'删除成功','status'=>true,],'JSON');
-			}else{
-				$this->ajaxReturn(['code'=>$this->tool->fail,'data'=>'','msg'=>'删除失败','status'=>true,],'JSON');
+			
+			$rtn = $this->tool->img_privacy_type->where(['tid' => I("post.did")])->select();
+			if(!$rtn){	
+				$rtn = $this->tool->img_details->where(['did' => I("post.did")])->delete();
+				if ($rtn) {
+					$this->ajaxReturn(['code'=>$this->tool->success,'data'=>'','msg'=>'删除成功','status'=>true,],'JSON');
+				}else{
+					$this->ajaxReturn(['code'=>$this->tool->fail,'data'=>'','msg'=>'删除失败','status'=>true,],'JSON');
+				}
+			} else {
+				$this->ajaxReturn(['code'=>$this->tool->fail,'data'=>'','msg'=>'删除失败,请先删除绑定的隐私分类和文章。','status'=>true,],'JSON');
 			}
+			
+			
 		} else {
 			$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
 		}
@@ -945,8 +1046,9 @@ class AdminController extends ControllerController {
 	
 	/**
 	* 获取统计页面数据All
+	* 原数据统计逻辑代码，以便后期查看
 	*/
-	public function getAdminStatisticsData () {
+	public function getAdminStatisticsData2 () {
 		$Model = new \Think\Model();
 		$where['uId']=I("post.uId");
 		$data['temp'] = $this->tool->img_users->where($where)->select();
@@ -1068,6 +1170,152 @@ class AdminController extends ControllerController {
 	}
 	
 	/**
+	* 获取统计页面数据All
+	*/
+	public function getAdminStatisticsData () {
+		$Model = new \Think\Model();
+		$data['temp'] = $this->tool->img_users->where("uId = ".I("post.uId"))->select();
+		if ($data['temp'][0]['permissions'] == 2 || 5) {
+			$data['startDate'] = '2018-7-01';
+			
+			$startDt = getdate(strtotime($data['startDate']));
+			$endDt = getdate(strtotime(date("Y-m-d", time())));
+			$sUTime = mktime(12, 0, 0, $startDt['mon'], $startDt['mday'], $startDt['year']);
+			$eUTime = mktime(12, 0, 0, $endDt['mon'], $endDt['mday'], $endDt['year']);
+			$data['runningDays'] = round(abs($sUTime - $eUTime) / 86400);
+			
+			// 下载总数
+			$data['activeDownloadAll'] = $this->tool->img_information->where('1=1')->count();
+			
+			// 用户总数
+			$data['userAll'] = $this->tool->img_users->where('1=1')->count();
+			
+			// 文章总数
+			$data['activeAll'] = $this->tool->img_article->where('state != 2')->count();
+			
+			// 文章img类型总数
+			$temp1 = []; $temp2 = 0;
+			$temp1 = $this->tool->img_article->where("state != 2 and typeFile LIKE '%img%' ")->select();
+			for ($q=0; $q<count($temp1); $q++) {
+				$temp2 += count(json_decode($temp1[$q]['img']));
+			}
+			$data['fileType']['img'] = [
+				'fileNum' 		=> $temp2,
+				'articleNum' 	=> count($temp1),
+				'ratio' 		=> round(count($temp1) / ($data['activeAll'] / 100), 2),
+			];
+			
+			// 文章psd类型总数
+			$temp1 = []; $temp2 = 0;
+			$temp1 = $this->tool->img_article->where("state != 2 and typeFile LIKE '%psd%' ")->select();
+			for ($q=0; $q<count($temp1); $q++) {
+				$temp2 += count(json_decode($temp1[$q]['psd']));
+			}
+			$data['fileType']['psd'] = [
+				'fileNum' 		=> $temp2,
+				'articleNum' 	=> count($temp1),
+				'ratio' 		=> round(count($temp1) / ($data['activeAll'] / 100), 2),
+			];
+			
+			// 文章video类型总数
+			$temp1 = []; $temp2 = 0;
+			$temp1 = $this->tool->img_article->where("state != 2 and typeFile LIKE '%video%' ")->select();
+			for ($q=0; $q<count($temp1); $q++) {
+				$temp2 += count(json_decode($temp1[$q]['video']));
+			}
+			$data['fileType']['video'] = [
+				'fileNum' 		=> $temp2,
+				'articleNum' 	=> count($temp1),
+				'ratio' 		=> round(count($temp1) / ($data['activeAll'] / 100), 2),
+			];
+			
+			// 文章ai类型总数
+			$temp1 = []; $temp2 = 0;
+			$temp1 = $this->tool->img_article->where("state != 2 and typeFile LIKE '%ai%' ")->select();
+			for ($q=0; $q<count($temp1); $q++) {
+				$temp2 += count(json_decode($temp1[$q]['ai']));
+			}
+			$data['fileType']['ai'] = [
+				'fileNum' 		=> $temp2,
+				'articleNum' 	=> count($temp1),
+				'ratio' 		=> round(count($temp1) / ($data['activeAll'] / 100), 2),
+			];
+			
+			// 文章pdf类型总数
+			$temp1 = []; $temp2 = 0;
+			$temp1 = $this->tool->img_article->where("state != 2 and typeFile LIKE '%pdf%' ")->select();
+			for ($q=0; $q<count($temp1); $q++) {
+				$temp2 += count(json_decode($temp1[$q]['pdf']));
+			}
+			$data['fileType']['pdf'] = [
+				'fileNum' 		=> $temp2,
+				'articleNum' 	=> count($temp1),
+				'ratio' 		=> round(count($temp1) / ($data['activeAll'] / 100), 2),
+			];
+			
+			// 文章engineering类型总数
+			$temp1 = []; $temp2 = 0;
+			$temp1 = $this->tool->img_article->where("state != 2 and typeFile LIKE '%engineering%' ")->select();
+			for ($q=0; $q<count($temp1); $q++) {
+				$temp2 += count(json_decode($temp1[$q]['engineering']));
+			}
+			$data['fileType']['zip'] = [
+				'fileNum' 		=> $temp2,
+				'articleNum' 	=> count($temp1),
+				'ratio' 		=> round(count($temp1) / ($data['activeAll'] / 100), 2),
+			];
+			
+			// 文章word类型总数
+			$temp1 = []; $temp2 = 0;
+			$temp1 = $this->tool->img_article->where("state != 2 and typeFile LIKE '%word%' ")->select();
+			for ($q=0; $q<count($temp1); $q++) {
+				$temp2 += count(json_decode($temp1[$q]['word']));
+			}
+			$data['fileType']['word'] = [
+				'fileNum' 		=> $temp2,
+				'articleNum' 	=> count($temp1),
+				'ratio' 		=> round(count($temp1) / ($data['activeAll'] / 100), 2),
+			];
+			
+			// 文章excel类型总数
+			$temp1 = []; $temp2 = 0;
+			$temp1 = $this->tool->img_article->where("state != 2 and typeFile LIKE '%excel%' ")->select();
+			for ($q=0; $q<count($temp1); $q++) {
+				$temp2 += count(json_decode($temp1[$q]['excel']));
+			}
+			$data['fileType']['excel'] = [
+				'fileNum' 		=> $temp2,
+				'articleNum' 	=> count($temp1),
+				'ratio' 		=> round(count($temp1) / ($data['activeAll'] / 100), 2),
+			];
+			
+			// 用户发布排行榜（在职用户）
+			$data['articleRanking'] = $Model->query("SELECT u.nickname, COUNT(a.mId) as 'count' FROM img_article a, img_users u WHERE a.uId = u.uId and u.state != 1 GROUP BY u.nickname ORDER BY count DESC");
+			
+			// 最近发布文章
+			$data['activeLately'] = $Model->query("SELECT a.mId, a.typeFile, a.title, a.img, a.psd, a.video, a.ai, a.pdf, a.word, a.excel, a.engineering, a.registerTimeImg, u.nickname, u.sex, a.click FROM img_article a, img_users u WHERE a.uId = u.uId GROUP BY a.title ORDER BY a.registerTimeImg DESC limit 20");
+			
+			// json字符串转数组
+			if(count($data['activeLately']) != 0){
+				for($a=0;$a<count($data['activeLately']);$a++){
+					$data['activeLately'][$a]['img'] = json_decode($data['activeLately'][$a]['img']);
+					$data['activeLately'][$a]['psd'] = json_decode($data['activeLately'][$a]['psd']);
+					$data['activeLately'][$a]['video'] = json_decode($data['activeLately'][$a]['video']);
+					$data['activeLately'][$a]['ai'] = json_decode($data['activeLately'][$a]['ai']);
+					$data['activeLately'][$a]['pdf'] = json_decode($data['activeLately'][$a]['pdf']);
+					$data['activeLately'][$a]['word'] = json_decode($data['activeLately'][$a]['word']);
+					$data['activeLately'][$a]['excel'] = json_decode($data['activeLately'][$a]['excel']);
+					$data['activeLately'][$a]['engineering'] = json_decode($data['activeLately'][$a]['engineering']);
+				}
+			}
+			
+			$this->ajaxReturn(['code'=>$this->tool->success,'data'=>$data,'msg'=>'success','status'=>true,],'JSON');
+		}else{
+			$this->ajaxReturn(['code'=>$this->tool->fail,'data'=>'111','msg'=>'获取失败','status'=>true,],'JSON');
+		}
+	}
+	
+	/**
 	* 查询用户浏览数据
 	*/
 	public function getUserBrowseWebInfo () {
@@ -1094,13 +1342,1077 @@ class AdminController extends ControllerController {
 				$data['userBrowseWebInfo'][$e]['name'] = $data['users'][$e]['nickname'];
 				for ($l=0; $l<count($data['riqi']); $l++) {
 					$data['temp'] =  $Model->query("SELECT count(*) as num from img_browse_web_info WHERE sameDay = '".$data['riqi'][$l]."' and uId = ".$data['users'][$e]['uId']);
+					$data['temp3'] =  $Model->query("SELECT count(*) as num from img_browse_web_info WHERE sameDay = '".$data['riqi'][$l]."'");
 					$data['temp2'][$l] =  "SELECT count(*) as num from img_browse_web_info WHERE sameDay = ".$data['riqi'][$l]." and uId = ".$data['users'][$e]['uId'];
 					$data['userBrowseWebInfo'][$e]['data'][$l] = $data['temp'] == null ? '0' : $data['temp'][0]['num'];
-					$data['temp'] = [];
+					$data['num'][$l] = $data['temp3'] == null ? '0' : $data['temp3'][0]['num'];
+					$data['temp'] = $data['temp3'] = [];
 				}
 			}
 
-			$this->ajaxReturn(['code'=>$this->tool->success,'data'=>['names'=>$data['name'], 'riqi'=>$data['riqi'], 'info'=>$data['userBrowseWebInfo']],'msg'=>'success','status'=>true,],'JSON');
+			$this->ajaxReturn(['code'=>$this->tool->success,'data'=>['names'=>$data['name'], 'riqi'=>$data['riqi'], 'info'=>$data['userBrowseWebInfo'], 'num'=>$data['num']],'msg'=>'success','status'=>true,],'JSON');
+		} else {
+			$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
+		}
+	}
+	
+	/**
+	* 统计-文章类型
+	* 1）支持单月查询：查询指定月份每天的数据
+	* 2）支持最多跨度一年内每月数据
+	* 3）支持项目查询
+	*/
+	public function getArticleSubsection () {
+		if(IS_POST)
+		{
+			// 判断指定的时间是单个月还是多个月份
+			if(I("post.beginTime") == I("post.endTime") && I("post.beginTime") != '' && I("post.endTime") != ''){
+				$shijian = $this->tool->getMonthAll(I("post.beginTime"));
+				$data['type'] = '1';
+			} else if(I("post.beginTime") != I("post.endTime") && I("post.beginTime") != '' && I("post.endTime") != ''){
+				$beginTimeY = explode("-",I("post.beginTime"))[0];
+				$beginTimeM = explode("-",I("post.beginTime"))[1];
+				$endTimeY = explode("-",I("post.endTime"))[0];
+				$endTimeM = explode("-",I("post.endTime"))[1];
+				$shijian = $this->tool->getDiyYearAll($beginTimeY,$beginTimeM,$endTimeY,$endTimeM);
+				// 数据内容的多少的区别设置
+				$data['type'] = count($shijian) <= 6 ? '2':'3';
+			}
+			
+			// 所有类型
+			$data['articleTypeName'] = $this->tool->img_type->where("state=1")->select();
+			// 所有项目
+			$projects = $this->tool->img_project->select();
+			$data['projects'][0] = [ 'label'=>'运维中', 'options'=>[] ];
+			$data['projects'][1] = [ 'label'=>'已结束', 'options'=>[] ];
+			for ($s=0; $s<count($projects); $s++) {
+				if($projects[$s]['webShow'] == '1'){
+					$data['projects'][0]['options'][count($data['projects'][0]['options'])] = ['value'=>$projects[$s]['pid'], 'label'=>$projects[$s]['xname']];
+				}
+				if($projects[$s]['webShow'] == '0'){
+					$data['projects'][1]['options'][count($data['projects'][1]['options'])] = ['value'=>$projects[$s]['pid'], 'label'=>$projects[$s]['xname']];
+				}
+			}
+			// 判断是否有传入项目参数
+			if(I("post.project") != ''){
+				$projectSql = "projectid = ".I("post.project")." and ";
+			} else {
+				$projectSql = "";
+			}
+			
+			// 循环查询时间内容数据
+			for ($e=0; $e<count($shijian); $e++) {
+				$data['riqi'][$e]['time'] = $shijian[$e]['riqi'];
+				
+				// 文章类型循环查询文章个数
+				for ($w=0; $w<count($data['articleTypeName']); $w++) {
+					$data['riqi'][$e]['articleType'][$w] = [
+						'typeName' => $data['articleTypeName'][$w]['lname'],
+						'num' => $this->tool->img_article->where($projectSql."typeid = ".$data['articleTypeName'][$w]['tid']." and registerTimeImg>=".$shijian[$e]['start']." and registerTimeImg<=".$shijian[$e]['end'])->count(),
+					];
+				}
+			}
+			
+			// 文章img类型总数(自定义时间)
+			$temp1 = []; $temp2 = 0;
+			$temp1 = $this->tool->img_article->where($projectSql."typeFile LIKE '%img%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+			for ($q=0; $q<count($temp1); $q++) {
+				$temp2 += count(json_decode($temp1[$q]['img']));
+			}
+			$data['fileType'][0] = [
+				'typeName' 	=> 'img',
+				'num' 	=> $temp2
+			];
+			// 文章psd类型总数(自定义时间)
+			$temp1 = []; $temp2 = 0;
+			$temp1 = $this->tool->img_article->where($projectSql."typeFile LIKE '%psd%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+			for ($q=0; $q<count($temp1); $q++) {
+				$temp2 += count(json_decode($temp1[$q]['psd']));
+			}
+			$data['fileType'][1] = [
+				'typeName' 	=> 'psd',
+				'num' 	=> $temp2,
+			];
+			// 文章video类型总数(自定义时间)
+			$temp1 = []; $temp2 = 0;
+			$temp1 = $this->tool->img_article->where($projectSql."typeFile LIKE '%video%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+			for ($q=0; $q<count($temp1); $q++) {
+				$temp2 += count(json_decode($temp1[$q]['video']));
+			}
+			$data['fileType'][2] = [
+				'typeName' 	=> 'video',
+				'num' 	=> $temp2,
+			];
+			// 文章ai类型总数(自定义时间)
+			$temp1 = []; $temp2 = 0;
+			$temp1 = $this->tool->img_article->where($projectSql."typeFile LIKE '%ai%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+			for ($q=0; $q<count($temp1); $q++) {
+				$temp2 += count(json_decode($temp1[$q]['ai']));
+			}
+			$data['fileType'][3] = [
+				'typeName' 	=> 'ai',
+				'num' 	=> $temp2,
+			];
+			// 文章pdf类型总数(自定义时间)
+			$temp1 = []; $temp2 = 0;
+			$temp1 = $this->tool->img_article->where($projectSql."typeFile LIKE '%pdf%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+			for ($q=0; $q<count($temp1); $q++) {
+				$temp2 += count(json_decode($temp1[$q]['pdf']));
+			}
+			$data['fileType'][4] = [
+				'typeName' 	=> 'pdf',
+				'num' 	=> $temp2,
+			];
+			// 文章engineering类型总数(自定义时间)
+			$temp1 = []; $temp2 = 0;
+			$temp1 = $this->tool->img_article->where($projectSql."typeFile LIKE '%engineering%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+			for ($q=0; $q<count($temp1); $q++) {
+				$temp2 += count(json_decode($temp1[$q]['engineering']));
+			}
+			$data['fileType'][5] = [
+				'typeName' 	=> 'zip',
+				'num' 	=> $temp2,
+			];
+			// 文章word类型总数(自定义时间)
+			$temp1 = []; $temp2 = 0;
+			$temp1 = $this->tool->img_article->where($projectSql."typeFile LIKE '%word%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+			for ($q=0; $q<count($temp1); $q++) {
+				$temp2 += count(json_decode($temp1[$q]['word']));
+			}
+			$data['fileType'][6] = [
+				'typeName' 	=> 'word',
+				'num' 	=> $temp2,
+			];
+			// 文章excel类型总数(自定义时间)
+			$temp1 = []; $temp2 = 0;
+			$temp1 = $this->tool->img_article->where($projectSql."typeFile LIKE '%excel%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+			for ($q=0; $q<count($temp1); $q++) {
+				$temp2 += count(json_decode($temp1[$q]['excel']));
+			}
+			$data['fileType'][7] = [
+				'typeName' 	=> 'excel',
+				'num' 	=> $temp2,
+			];
+			
+			$this->ajaxReturn(['code'=>$this->tool->success,'data'=>$data,'msg'=>'success','status'=>$shijian,],'JSON');
+
+		} else {
+			$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
+		}
+	}
+	
+	/**
+	* 统计-用户发布
+	* 1）支持单月查询：查询指定月份每天的数据
+	* 2）支持最多跨度一年内每月数据
+	* 3）支持单用户（单日总数）/多用户（每月总数）数据显示
+	*/
+	public function getArticleUserSubsection(){
+		if(IS_POST)
+		{
+			// 判断指定的时间是单个月还是多个月份
+			if(I("post.beginTime") == I("post.endTime") && I("post.beginTime") != '' && I("post.endTime") != ''){
+				$shijian = $this->tool->getMonthAll(I("post.beginTime"));
+				$echartsType = '1';
+			} else if(I("post.beginTime") != I("post.endTime") && I("post.beginTime") != '' && I("post.endTime") != ''){
+				$beginTimeY = explode("-",I("post.beginTime"))[0];
+				$beginTimeM = explode("-",I("post.beginTime"))[1];
+				$endTimeY = explode("-",I("post.endTime"))[0];
+				$endTimeM = explode("-",I("post.endTime"))[1];
+				$shijian = $this->tool->getDiyYearAll($beginTimeY,$beginTimeM,$endTimeY,$endTimeM);
+			}
+			
+			// 数据模型的类别设置
+			$data['type'] = I("post.uid") == "" ? '2':'1';
+			
+			// 所有类型
+			$data['articleTypeName'] = $this->tool->img_type->where("state=1")->select();
+			$data['users'] = $this->tool->img_users->field('uId,nickname,state')->where("state=".I("post.state"))->select();
+			$data['userALL'] = $this->tool->img_users->field('uId,nickname,state')->select();
+			
+			// 所有项目
+			$projects = $this->tool->img_project->select();
+			$data['projects'][0] = [ 'label'=>'运维中', 'options'=>[] ];
+			$data['projects'][1] = [ 'label'=>'已结束', 'options'=>[] ];
+			for ($s=0; $s<count($projects); $s++) {
+				if($projects[$s]['webShow'] == '1'){
+					$data['projects'][0]['options'][count($data['projects'][0]['options'])] = ['value'=>$projects[$s]['pid'], 'label'=>$projects[$s]['xname']];
+				}
+				if($projects[$s]['webShow'] == '0'){
+					$data['projects'][1]['options'][count($data['projects'][1]['options'])] = ['value'=>$projects[$s]['pid'], 'label'=>$projects[$s]['xname']];
+				}
+			}
+			// 判断是否有传入项目参数
+			if(I("post.project") != ''){
+				$projectSql = "projectid = ".I("post.project")." and ";
+			} else {
+				$projectSql = "";
+			}
+			
+			if(I("post.uid") == ""){
+				// 文章img类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where($projectSql."typeFile LIKE '%img%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['img']));
+				}
+				$data['fileType'][0] = [
+					'typeName' 	=> 'img',
+					'num' 	=> $temp2
+				];
+				// 文章psd类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where($projectSql."typeFile LIKE '%psd%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['psd']));
+				}
+				$data['fileType'][1] = [
+					'typeName' 	=> 'psd',
+					'num' 	=> $temp2,
+				];
+				// 文章video类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where($projectSql."typeFile LIKE '%video%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['video']));
+				}
+				$data['fileType'][2] = [
+					'typeName' 	=> 'video',
+					'num' 	=> $temp2,
+				];
+				// 文章ai类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where($projectSql."typeFile LIKE '%ai%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['ai']));
+				}
+				$data['fileType'][3] = [
+					'typeName' 	=> 'ai',
+					'num' 	=> $temp2,
+				];
+				// 文章pdf类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where($projectSql."typeFile LIKE '%pdf%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['pdf']));
+				}
+				$data['fileType'][4] = [
+					'typeName' 	=> 'pdf',
+					'num' 	=> $temp2,
+				];
+				// 文章engineering类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where($projectSql."typeFile LIKE '%engineering%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['engineering']));
+				}
+				$data['fileType'][5] = [
+					'typeName' 	=> 'zip',
+					'num' 	=> $temp2,
+				];
+				// 文章word类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where($projectSql."typeFile LIKE '%word%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['word']));
+				}
+				$data['fileType'][6] = [
+					'typeName' 	=> 'word',
+					'num' 	=> $temp2,
+				];
+				// 文章excel类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where($projectSql."typeFile LIKE '%excel%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['excel']));
+				}
+				$data['fileType'][7] = [
+					'typeName' 	=> 'excel',
+					'num' 	=> $temp2,
+				];
+				
+				for ($q=0; $q<count($data['users']); $q++) {
+					$data['userStatistics'][$q]['name'] = $data['users'][$q]['nickname'];
+					// 文章类型循环查询文章个数
+					for ($w=0; $w<count($data['articleTypeName']); $w++) {
+						$data['userStatistics'][$q]['articleType'][$w] = [
+							'typeName' => $data['articleTypeName'][$w]['lname'],
+							'num' => $this->tool->img_article->where($projectSql."uId = ".$data['users'][$q]['uId']." and typeid = ".$data['articleTypeName'][$w]['tid']." and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->count(),
+						];
+					}
+				}
+			} else {
+				// 用户名称
+				for ($q=0; $q<count($data['users']); $q++) {
+					if($data['users'][$q]['uId'] == I("post.uid")){
+						$data['userStatistics'][0]['name'] = $data['users'][$q]['nickname'];
+					}
+				}
+				
+				// 文章img类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where($projectSql."uId = ".I("post.uid")." and typeFile LIKE '%img%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['img']));
+				}
+				$data['userStatistics'][0]['fileType'][0] = [
+					'typeName' 	=> 'img',
+					'num' 	=> $temp2,
+				];
+				// 文章psd类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where($projectSql."uId = ".I("post.uid")." and typeFile LIKE '%psd%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['psd']));
+				}
+				$data['userStatistics'][0]['fileType'][1] = [
+					'typeName' 	=> 'psd',
+					'num' 	=> $temp2,
+				];
+				// 文章video类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where($projectSql."uId = ".I("post.uid")." and typeFile LIKE '%video%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['video']));
+				}
+				$data['userStatistics'][0]['fileType'][2] = [
+					'typeName' 	=> 'video',
+					'num' 	=> $temp2,
+				];
+				// 文章ai类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where($projectSql."uId = ".I("post.uid")." and typeFile LIKE '%ai%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['ai']));
+				}
+				$data['userStatistics'][0]['fileType'][3] = [
+					'typeName' 	=> 'ai',
+					'num' 	=> $temp2,
+				];
+				// 文章pdf类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where($projectSql."uId = ".I("post.uid")." and typeFile LIKE '%pdf%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['pdf']));
+				}
+				$data['userStatistics'][0]['fileType'][4] = [
+					'typeName' 	=> 'pdf',
+					'num' 	=> $temp2,
+				];
+				// 文章engineering类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where($projectSql."uId = ".I("post.uid")." and typeFile LIKE '%engineering%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['engineering']));
+				}
+				$data['userStatistics'][0]['fileType'][5] = [
+					'typeName' 	=> 'zip',
+					'num' 	=> $temp2,
+				];
+				// 文章word类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where($projectSql."uId = ".I("post.uid")." and typeFile LIKE '%word%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['word']));
+				}
+				$data['userStatistics'][0]['fileType'][6] = [
+					'typeName' 	=> 'word',
+					'num' 	=> $temp2,
+				];
+				// 文章excel类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where($projectSql."uId = ".I("post.uid")." and typeFile LIKE '%excel%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['excel']));
+				}
+				$data['userStatistics'][0]['fileType'][7] = [
+					'typeName' 	=> 'excel',
+					'num' 	=> $temp2,
+				];
+				
+				// 循环查询时间内容数据
+				for ($e=0; $e<count($shijian); $e++) {
+					$data['userStatistics'][0]['riqi'][$e]['time'] = $shijian[$e]['riqi'];
+					// 文章类型循环查询文章个数
+					for ($w=0; $w<count($data['articleTypeName']); $w++) {
+						$data['userStatistics'][0]['riqi'][$e]['articleType'][$w] = [
+							'typeName' => $data['articleTypeName'][$w]['lname'],
+							'num' => $this->tool->img_article->where($projectSql."uId = ".I("post.uid")." and typeid = ".$data['articleTypeName'][$w]['tid']." and registerTimeImg>=".$shijian[$e]['start']." and registerTimeImg<=".$shijian[$e]['end'])->count(),
+						];
+					}
+				}
+			}
+			
+			
+			$this->ajaxReturn(['code'=>$this->tool->success,'data'=>$data,'msg'=>'success','status'=>true,],'JSON');
+		} else {
+			$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
+		}
+	}
+	
+	/**
+	* 统计-用户下载
+	* 1）支持单月查询：查询指定月份每天的数据
+	* 2）支持最多跨度一年内每月数据
+	* 3）支持单用户（单日总数）/多用户（每月总数）数据显示
+	*/
+	public function getArticleUserDownload(){
+		if(IS_POST)
+		{
+			$Model = new \Think\Model();
+			
+			// 判断指定的时间是单个月还是多个月份
+			if(I("post.beginTime") == I("post.endTime") && I("post.beginTime") != '' && I("post.endTime") != ''){
+				$shijian = $this->tool->getMonthAll(I("post.beginTime"));
+				$echartsType = '1';
+			} else if(I("post.beginTime") != I("post.endTime") && I("post.beginTime") != '' && I("post.endTime") != ''){
+				$beginTimeY = explode("-",I("post.beginTime"))[0];
+				$beginTimeM = explode("-",I("post.beginTime"))[1];
+				$endTimeY = explode("-",I("post.endTime"))[0];
+				$endTimeM = explode("-",I("post.endTime"))[1];
+				$shijian = $this->tool->getDiyYearAll($beginTimeY,$beginTimeM,$endTimeY,$endTimeM);
+			}
+			
+			// 数据模型的类别设置 1：单人   2：多人
+			$data['type'] = I("post.uid") == "" ? '2':'1';
+			
+			// 指定状态用户和所有用户
+			$data['users'] = $this->tool->img_users->field('uId,nickname,state')->where("state=".I("post.state"))->select();
+			$data['userALL'] = $this->tool->img_users->field('uId,nickname,state')->select();
+			
+			if(I("post.uid") == ""){
+				// 查询多人指定时间、用户状态的数据
+				for ($e=0; $e<count($data['users']); $e++) {
+					$temp = $Model->query("SELECT u.nickname as name, count(*) as 'count' FROM img_information i, img_users u WHERE u.uId = i.froid and u.uId = ".$data['users'][$e]['uId']." and i.created >= ".$shijian[0]['start']." and i.created <= ".$shijian[count($shijian)-1]['end']." group by u.nickname");
+					$data['articleUserDownload'][$e] = $temp == [] ? ['name'=>$data['users'][$e]['nickname'],'count'=>'0'] : $temp[0];
+				}
+			} else {
+				for ($q=0; $q<count($data['users']); $q++) {
+					if($data['users'][$q]['uId']==I("post.uid")) $onUser = $data['users'][$q];
+				}
+				// 查询单人指定时间、用户状态的数据
+				for ($e=0; $e<count($shijian); $e++) {
+					$data['articleUserDownload'][$e]['riqi'] = $shijian[$e]['riqi'];
+					$temp = $Model->query("SELECT u.nickname as name, count(*) as 'count' FROM img_information i, img_users u WHERE u.uId = i.froid and u.uId = ".I("post.uid")." and i.created >= ".$shijian[$e]['start']." and i.created <= ".$shijian[$e]['end']." group by u.nickname");
+					$data['articleUserDownload'][$e]['shuju'] = $temp == [] ? ['name'=>$onUser['nickname'],'count'=>'0'] : $temp[0];
+				}
+			}
+			
+			$this->ajaxReturn(['code'=>$this->tool->success,'data'=>$data,'msg'=>'success','status'=>true,],'JSON');
+		} else {
+			$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
+		}
+	}
+	
+	/**
+	* 统计-项目文章占比
+	* 1）支持单月查询总数据
+	* 2）支持最多跨度一年内总数据
+	* 3）支持项目查询
+	*/
+	public function getArticleProject(){
+		if(IS_POST)
+		{
+			// 判断指定的时间是单个月还是多个月份
+			if(I("post.beginTime") == I("post.endTime") && I("post.beginTime") != '' && I("post.endTime") != ''){
+				$shijian = $this->tool->getMonthAll(I("post.beginTime"));
+				$data['type'] = '1';
+			} else if(I("post.beginTime") != I("post.endTime") && I("post.beginTime") != '' && I("post.endTime") != ''){
+				$beginTimeY = explode("-",I("post.beginTime"))[0];
+				$beginTimeM = explode("-",I("post.beginTime"))[1];
+				$endTimeY = explode("-",I("post.endTime"))[0];
+				$endTimeM = explode("-",I("post.endTime"))[1];
+				$shijian = $this->tool->getDiyYearAll($beginTimeY,$beginTimeM,$endTimeY,$endTimeM);
+				// 数据内容的多少的区别设置
+				$data['type'] = count($shijian) <= 6 ? '2':'3';
+			} else if(I("post.beginTime") == '' && I("post.endTime") == ''){
+				$shijian = [];
+			}
+			
+			// 所有类型
+			$data['articleTypeName'] = $this->tool->img_type->where("state=1")->select();
+			// 所有项目
+			$projects = $this->tool->img_project->select();
+			$data['projects'][0] = [ 'label'=>'运维中', 'options'=>[] ];
+			$data['projects'][1] = [ 'label'=>'已结束', 'options'=>[] ];
+			for ($s=0; $s<count($projects); $s++) {
+				if($projects[$s]['webShow'] == '1'){
+					$data['projects'][0]['options'][count($data['projects'][0]['options'])] = ['value'=>$projects[$s]['pid'], 'label'=>$projects[$s]['xname']];
+				}
+				if($projects[$s]['webShow'] == '0'){
+					$data['projects'][1]['options'][count($data['projects'][1]['options'])] = ['value'=>$projects[$s]['pid'], 'label'=>$projects[$s]['xname']];
+				}
+				if(I("post.project") != '' && I("post.project") == $projects[$s]['pid']){
+					$projectNam = $projects[$s]['xname'];
+				}
+			}
+			
+			if(count($shijian) == 0 && I("post.project") == ''){
+				
+				// 项目文章循环查询文章个数
+				for ($e=0; $e<count($projects); $e++) {
+					$data['articleProject']['project'][$e] = [
+						'projectName' => $projects[$e]['xname'],
+						'num' => intval($this->tool->img_article->where("state != 2 and projectid = ".$projects[$e]['pid'])->count()),
+					];
+				}
+				
+				// 文章类型循环查询文章个数
+				for ($w=0; $w<count($data['articleTypeName']); $w++) {
+					$data['articleProject']['articleType'][$w] = [
+						'typeName' => $data['articleTypeName'][$w]['lname'],
+						'num' => intval($this->tool->img_article->where("state != 2 and typeid = ".$data['articleTypeName'][$w]['tid'])->count()),
+					];
+				}
+				
+				// 文章img类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and typeFile LIKE '%img%' ")->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['img']));
+				}
+				$data['articleProject']['fileType'][0] = [
+					'typeName' 	=> 'img',
+					'num' 	=> $temp2
+				];
+				// 文章psd类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and typeFile LIKE '%psd%' ")->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['psd']));
+				}
+				$data['articleProject']['fileType'][1] = [
+					'typeName' 	=> 'psd',
+					'num' 	=> $temp2,
+				];
+				// 文章video类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and typeFile LIKE '%video%' ")->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['video']));
+				}
+				$data['articleProject']['fileType'][2] = [
+					'typeName' 	=> 'video',
+					'num' 	=> $temp2,
+				];
+				// 文章ai类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and typeFile LIKE '%ai%' ")->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['ai']));
+				}
+				$data['articleProject']['fileType'][3] = [
+					'typeName' 	=> 'ai',
+					'num' 	=> $temp2,
+				];
+				// 文章pdf类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and typeFile LIKE '%pdf%' ")->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['pdf']));
+				}
+				$data['articleProject']['fileType'][4] = [
+					'typeName' 	=> 'pdf',
+					'num' 	=> $temp2,
+				];
+				// 文章engineering类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and typeFile LIKE '%engineering%' ")->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['engineering']));
+				}
+				$data['articleProject']['fileType'][5] = [
+					'typeName' 	=> 'zip',
+					'num' 	=> $temp2,
+				];
+				// 文章word类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and typeFile LIKE '%word%' ")->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['word']));
+				}
+				$data['articleProject']['fileType'][6] = [
+					'typeName' 	=> 'word',
+					'num' 	=> $temp2,
+				];
+				// 文章excel类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and typeFile LIKE '%excel%' ")->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['excel']));
+				}
+				$data['articleProject']['fileType'][7] = [
+					'typeName' 	=> 'excel',
+					'num' 	=> $temp2,
+				];
+			} else if(count($shijian) != 0 && I("post.project") != '') {
+				
+				// 项目文章查询个数
+				$data['articleProject']['project'][0] = [
+					'projectName' => $projectNam,
+					'num' => intval($this->tool->img_article->where("state != 2 and projectid = ".I("post.project")." and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->count()),
+				];
+				
+				// 文章类型循环查询文章个数
+				for ($w=0; $w<count($data['articleTypeName']); $w++) {
+					$data['articleProject']['articleType'][$w] = [
+						'typeName' => $data['articleTypeName'][$w]['lname'],
+						'num' => intval($this->tool->img_article->where("state != 2 and projectid = ".I("post.project")." and typeid = ".$data['articleTypeName'][$w]['tid']." and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->count()),
+					];
+				}
+				
+				// 文章img类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and projectid = ".I("post.project")." and typeFile LIKE '%img%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['img']));
+				}
+				$data['articleProject']['fileType'][0] = [
+					'typeName' 	=> 'img',
+					'num' 	=> $temp2
+				];
+				// 文章psd类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and projectid = ".I("post.project")." and typeFile LIKE '%psd%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['psd']));
+				}
+				$data['articleProject']['fileType'][1] = [
+					'typeName' 	=> 'psd',
+					'num' 	=> $temp2,
+				];
+				// 文章video类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and projectid = ".I("post.project")." and typeFile LIKE '%video%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['video']));
+				}
+				$data['articleProject']['fileType'][2] = [
+					'typeName' 	=> 'video',
+					'num' 	=> $temp2,
+				];
+				// 文章ai类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and projectid = ".I("post.project")." and typeFile LIKE '%ai%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['ai']));
+				}
+				$data['articleProject']['fileType'][3] = [
+					'typeName' 	=> 'ai',
+					'num' 	=> $temp2,
+				];
+				// 文章pdf类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and projectid = ".I("post.project")." and typeFile LIKE '%pdf%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['pdf']));
+				}
+				$data['articleProject']['fileType'][4] = [
+					'typeName' 	=> 'pdf',
+					'num' 	=> $temp2,
+				];
+				// 文章engineering类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and projectid = ".I("post.project")." and typeFile LIKE '%engineering%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['engineering']));
+				}
+				$data['articleProject']['fileType'][5] = [
+					'typeName' 	=> 'zip',
+					'num' 	=> $temp2,
+				];
+				// 文章word类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and projectid = ".I("post.project")." and typeFile LIKE '%word%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['word']));
+				}
+				$data['articleProject']['fileType'][6] = [
+					'typeName' 	=> 'word',
+					'num' 	=> $temp2,
+				];
+				// 文章excel类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and projectid = ".I("post.project")." and typeFile LIKE '%excel%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['excel']));
+				}
+				$data['articleProject']['fileType'][7] = [
+					'typeName' 	=> 'excel',
+					'num' 	=> $temp2,
+				];
+				
+			} else if(count($shijian) == 0 && I("post.project") != ''){
+				// 项目文章查询个数
+				$data['articleProject']['project'][0] = [
+					'projectName' => $projectNam,
+					'num' => intval($this->tool->img_article->where("state != 2 and projectid = ".I("post.project"))->count()),
+				];
+				
+				// 文章类型循环查询文章个数
+				for ($w=0; $w<count($data['articleTypeName']); $w++) {
+					$data['articleProject']['articleType'][$w] = [
+						'typeName' => $data['articleTypeName'][$w]['lname'],
+						'num' => intval($this->tool->img_article->where("state != 2 and projectid = ".I("post.project")." and typeid = ".$data['articleTypeName'][$w]['tid'])->count()),
+					];
+				}
+				
+				// 文章img类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and projectid = ".I("post.project")." and typeFile LIKE '%img%' ")->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['img']));
+				}
+				$data['articleProject']['fileType'][0] = [
+					'typeName' 	=> 'img',
+					'num' 	=> $temp2
+				];
+				// 文章psd类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and projectid = ".I("post.project")." and typeFile LIKE '%psd%' ")->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['psd']));
+				}
+				$data['articleProject']['fileType'][1] = [
+					'typeName' 	=> 'psd',
+					'num' 	=> $temp2,
+				];
+				// 文章video类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and projectid = ".I("post.project")." and typeFile LIKE '%video%' ")->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['video']));
+				}
+				$data['articleProject']['fileType'][2] = [
+					'typeName' 	=> 'video',
+					'num' 	=> $temp2,
+				];
+				// 文章ai类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and projectid = ".I("post.project")." and typeFile LIKE '%ai%' ")->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['ai']));
+				}
+				$data['articleProject']['fileType'][3] = [
+					'typeName' 	=> 'ai',
+					'num' 	=> $temp2,
+				];
+				// 文章pdf类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and projectid = ".I("post.project")." and typeFile LIKE '%pdf%' ")->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['pdf']));
+				}
+				$data['articleProject']['fileType'][4] = [
+					'typeName' 	=> 'pdf',
+					'num' 	=> $temp2,
+				];
+				// 文章engineering类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and projectid = ".I("post.project")." and typeFile LIKE '%engineering%' ")->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['engineering']));
+				}
+				$data['articleProject']['fileType'][5] = [
+					'typeName' 	=> 'zip',
+					'num' 	=> $temp2,
+				];
+				// 文章word类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and projectid = ".I("post.project")." and typeFile LIKE '%word%' ")->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['word']));
+				}
+				$data['articleProject']['fileType'][6] = [
+					'typeName' 	=> 'word',
+					'num' 	=> $temp2,
+				];
+				// 文章excel类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and projectid = ".I("post.project")." and typeFile LIKE '%excel%' ")->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['excel']));
+				}
+				$data['articleProject']['fileType'][7] = [
+					'typeName' 	=> 'excel',
+					'num' 	=> $temp2,
+				];
+			} else if(count($shijian) != 0 && I("post.project") == ''){
+				
+				// 项目文章循环查询文章个数
+				for ($e=0; $e<count($projects); $e++) {
+					$data['articleProject']['project'][$e] = [
+						'projectName' => $projects[$e]['xname'],
+						'num' => intval($this->tool->img_article->where("state != 2 and projectid = ".$projects[$e]['pid']." and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->count()),
+					];
+				}
+				
+				// 文章类型循环查询文章个数
+				for ($w=0; $w<count($data['articleTypeName']); $w++) {
+					$data['articleProject']['articleType'][$w] = [
+						'typeName' => $data['articleTypeName'][$w]['lname'],
+						'num' => intval($this->tool->img_article->where("state != 2 and typeid = ".$data['articleTypeName'][$w]['tid']." and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->count()),
+					];
+				}
+				
+				// 文章img类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and typeFile LIKE '%img%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['img']));
+				}
+				$data['articleProject']['fileType'][0] = [
+					'typeName' 	=> 'img',
+					'num' 	=> $temp2
+				];
+				// 文章psd类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and typeFile LIKE '%psd%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['psd']));
+				}
+				$data['articleProject']['fileType'][1] = [
+					'typeName' 	=> 'psd',
+					'num' 	=> $temp2,
+				];
+				// 文章video类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and typeFile LIKE '%video%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['video']));
+				}
+				$data['articleProject']['fileType'][2] = [
+					'typeName' 	=> 'video',
+					'num' 	=> $temp2,
+				];
+				// 文章ai类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and typeFile LIKE '%ai%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['ai']));
+				}
+				$data['articleProject']['fileType'][3] = [
+					'typeName' 	=> 'ai',
+					'num' 	=> $temp2,
+				];
+				// 文章pdf类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and typeFile LIKE '%pdf%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['pdf']));
+				}
+				$data['articleProject']['fileType'][4] = [
+					'typeName' 	=> 'pdf',
+					'num' 	=> $temp2,
+				];
+				// 文章engineering类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and typeFile LIKE '%engineering%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['engineering']));
+				}
+				$data['articleProject']['fileType'][5] = [
+					'typeName' 	=> 'zip',
+					'num' 	=> $temp2,
+				];
+				// 文章word类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and typeFile LIKE '%word%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['word']));
+				}
+				$data['articleProject']['fileType'][6] = [
+					'typeName' 	=> 'word',
+					'num' 	=> $temp2,
+				];
+				// 文章excel类型总数(自定义时间)
+				$temp1 = []; $temp2 = 0;
+				$temp1 = $this->tool->img_article->where("state != 2 and typeFile LIKE '%excel%' and registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'])->select();
+				for ($q=0; $q<count($temp1); $q++) {
+					$temp2 += count(json_decode($temp1[$q]['excel']));
+				}
+				$data['articleProject']['fileType'][7] = [
+					'typeName' 	=> 'excel',
+					'num' 	=> $temp2,
+				];
+			}
+			
+			$this->ajaxReturn(['code'=>$this->tool->success,'data'=>$data,'msg'=>'success','status'=>true,],'JSON');
+
+		} else {
+			$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
+		}
+	}
+	
+	/**
+	* 统计-标签文章
+	* 1）支持用户查询
+	* 2）支持最多跨度一年内时间查询
+	* 3）支持项目查询
+	*/
+	public function getArticleLabel () {
+		if(IS_POST)
+		{
+			// 判断指定的时间是单个月还是多个月份
+			if(I("post.beginTime") == I("post.endTime") && I("post.beginTime") != '' && I("post.endTime") != ''){
+				$shijian = $this->tool->getMonthAll(I("post.beginTime"));
+				$sql[0]= "registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'];
+			} else if(I("post.beginTime") != I("post.endTime") && I("post.beginTime") != '' && I("post.endTime") != ''){
+				$beginTimeY = explode("-",I("post.beginTime"))[0];
+				$beginTimeM = explode("-",I("post.beginTime"))[1];
+				$endTimeY = explode("-",I("post.endTime"))[0];
+				$endTimeM = explode("-",I("post.endTime"))[1];
+				$shijian = $this->tool->getDiyYearAll($beginTimeY,$beginTimeM,$endTimeY,$endTimeM);
+				$sql[0]= "registerTimeImg>=".$shijian[0]['start']." and registerTimeImg<=".$shijian[count($shijian)-1]['end'];
+			} else if(I("post.beginTime") == '' && I("post.endTime") == ''){
+				$shijian = [];
+			}
+			
+			// 所有用户
+			$data['users'] = $this->tool->img_users->field('uId,nickname,state')->select();
+
+			// 所有类型
+			$data['type'] = $this->tool->img_type->select();
+			
+			// 表头参数
+			$data['thead'] = [];
+			foreach($data['type'] as $key => $value){
+				if($key == 0){
+					$data['thead'][count($data['thead'])] = [
+						'label' => '名称',
+						'prop' => 'name'
+					];
+					$data['thead'][count($data['thead'])] = [
+						'label' => $value['lname'],
+						'prop' => $value['nameEnglish']
+					];
+				} else {
+					$data['thead'][count($data['thead'])] = [
+						'label' => $value['lname'],
+						'prop' => $value['nameEnglish']
+					];
+				}
+			}
+			$data['thead'][count($data['thead'])] = [ 'label' => 'img', 'prop' => 'img' ];
+			$data['thead'][count($data['thead'])] = [ 'label' => 'psd', 'prop' => 'psd' ];
+			$data['thead'][count($data['thead'])] = [ 'label' => 'video', 'prop' => 'video' ];
+			$data['thead'][count($data['thead'])] = [ 'label' => 'ai', 'prop' => 'ai' ];
+			$data['thead'][count($data['thead'])] = [ 'label' => 'pdf', 'prop' => 'pdf' ];
+			$data['thead'][count($data['thead'])] = [ 'label' => 'word', 'prop' => 'word' ];
+			$data['thead'][count($data['thead'])] = [ 'label' => 'excel', 'prop' => 'excel' ];
+			$data['thead'][count($data['thead'])] = [ 'label' => 'zip', 'prop' => 'zip' ];
+			
+
+			// 所有项目
+			$projects = $this->tool->img_project->select();
+			$data['projects'][0] = [ 'label'=>'运维中', 'options'=>[] ];
+			$data['projects'][1] = [ 'label'=>'已结束', 'options'=>[] ];
+			for ($s=0; $s<count($projects); $s++) {
+				if($projects[$s]['webShow'] == '1'){
+					$data['projects'][0]['options'][count($data['projects'][0]['options'])] = ['value'=>$projects[$s]['pid'], 'label'=>$projects[$s]['xname']];
+				}
+				if($projects[$s]['webShow'] == '0'){
+					$data['projects'][1]['options'][count($data['projects'][1]['options'])] = ['value'=>$projects[$s]['pid'], 'label'=>$projects[$s]['xname']];
+				}
+				if(I("post.project") != '' && I("post.project") == $projects[$s]['pid']){
+					$projectNam = $projects[$s]['xname'];
+				}
+			}
+			
+			$temp = []; $label = [];
+			
+			if(I("post.state")){
+				if(I("post.pid") != ''){
+					$sql[count($sql)]= "projectid = ".I("post.pid");
+				}
+				if(I("post.uid") != ''){
+					$sql[count($sql)]= "uId = ".I("post.uid");
+				}
+				if(I("post.key") != ''){
+					$temp = [];
+					if(stripos(I("post.key"),',')){
+						$temp = explode(",",I("post.key"));
+						foreach($temp as $value){
+							$label[count($label)]= [
+								'name' => $value,
+								'sql' => "( `title` LIKE '%".$value."%' OR `keyword` LIKE '%".$value."%' OR `describe` LIKE '%".$value."%' )",
+							];
+						}
+					} else {
+						$label[count($label)]= [
+								'name' => I("post.key"),
+								'sql' => "( `title` LIKE '%".I("post.key")."%' OR `keyword` LIKE '%".I("post.key")."%' OR `describe` LIKE '%".I("post.key")."%' )",
+							];
+					}
+				} else {
+					// 标签组 + 标签不为空 || 标签组等于空 + 标签不为空
+					if(I("post.gid") != '' && I("post.lid") != '' || I("post.gid") == '' && I("post.lid") != ''){
+						$temp = [];
+						$temp = $this->tool->img_label->where(['lid' => I("post.lid")])->find();
+						$label[count($label)]= [
+							'name' => $temp['name'],
+							'sql' => "( `title` LIKE '%".$temp['name']."%' OR `keyword` LIKE '%".$temp['name']."%' OR `describe` LIKE '%".$temp['name']."%' )",
+						];
+					// 标签不为空组 + 标签等于空
+					} else if(I("post.gid") != '' && I("post.lid") == '') {
+						$temp = [];
+						$temp = $this->tool->img_label->where(['gid' => I("post.gid")])->select();
+						foreach($temp as $value){
+							$label[count($label)]= [
+								'name' => $value['name'],
+								'sql' => "( `title` LIKE '%".$value['name']."%' OR `keyword` LIKE '%".$value['name']."%' OR `describe` LIKE '%".$value['name']."%' )",
+							];
+						}
+
+					}
+				}
+				// 遍历所有的单个条件拼接sql
+				foreach($sql as $key => $value){
+					if($key != count($sql)-1){
+						$sqlExecute = $sqlExecute.$value." and ";
+					} else {
+						$sqlExecute = $sqlExecute.$value;
+					}
+				}
+				// 对多个标签的循环查询
+				foreach($label as $key => $value){
+					$data['article'][$key]['name'] = $value['name'];
+					foreach($data['type'] as $typeValue){
+						if($sqlExecute != null){
+							$articleData = $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeid = ".$typeValue['tid']." and ".$sqlExecute." and ".$value['sql'])->count();
+						} else {
+							$articleData = $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeid = ".$typeValue['tid']." and ".$value['sql'])->count();
+						}
+						$data['article'][$key][$typeValue['nameEnglish']] = $articleData == null ? 0 : $articleData;
+						$data['article'][$key]['sql'] = $this->tool->img_article->getLastSql();
+						$articleData = 0;
+					}
+
+					if($sqlExecute != null){
+						$data['article'][$key]['img'] = $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%img%' and ".$sqlExecute." and ".$value['sql'])->count() == null ? 0 : $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%img%' and ".$sqlExecute." and ".$value['sql'])->count();
+						$data['article'][$key]['psd'] = $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%psd%' and ".$sqlExecute." and ".$value['sql'])->count() == null ? 0 : $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%psd%' and ".$sqlExecute." and ".$value['sql'])->count();
+						$data['article'][$key]['video'] = $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%video%' and ".$sqlExecute." and ".$value['sql'])->count() == null ? 0 : $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%video%' and ".$sqlExecute." and ".$value['sql'])->count();
+						$data['article'][$key]['ai'] = $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%ai%' and ".$sqlExecute." and ".$value['sql'])->count() == null ? 0 : $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%ai%' and ".$sqlExecute." and ".$value['sql'])->count();
+						$data['article'][$key]['pdf'] = $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%pdf%' and ".$sqlExecute." and ".$value['sql'])->count() == null ? 0 : $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%pdf%' and ".$sqlExecute." and ".$value['sql'])->count();
+						$data['article'][$key]['word'] = $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%word%' and ".$sqlExecute." and ".$value['sql'])->count() == null ? 0 : $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%word%' and ".$sqlExecute." and ".$value['sql'])->count();
+						$data['article'][$key]['excel'] = $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%excel%' and ".$sqlExecute." and ".$value['sql'])->count() == null ? 0 : $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%excel%' and ".$sqlExecute." and ".$value['sql'])->count();
+						$data['article'][$key]['zip'] = $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%engineering%' and ".$sqlExecute." and ".$value['sql'])->count() == null ? 0 : $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%engineering%' and ".$sqlExecute." and ".$value['sql'])->count();
+					} else {
+						$data['article'][$key]['img'] = $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%img%' and ".$value['sql'])->count() == null ? 0 : $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%img%' and ".$value['sql'])->count();
+						$data['article'][$key]['psd'] = $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%psd%' and ".$value['sql'])->count() == null ? 0 : $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%psd%' and ".$value['sql'])->count();
+						$data['article'][$key]['video'] = $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%video%' and ".$value['sql'])->count() == null ? 0 : $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%video%' and ".$value['sql'])->count();
+						$data['article'][$key]['ai'] = $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%ai%' and ".$value['sql'])->count() == null ? 0 : $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%ai%' and ".$value['sql'])->count();
+						$data['article'][$key]['pdf'] = $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%pdf%' and ".$value['sql'])->count() == null ? 0 : $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%pdf%' and ".$value['sql'])->count();
+						$data['article'][$key]['word'] = $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%word%' and ".$value['sql'])->count() == null ? 0 : $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%word%' and ".$value['sql'])->count();
+						$data['article'][$key]['excel'] = $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%excel%' and ".$value['sql'])->count() == null ? 0 : $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%excel%' and ".$value['sql'])->count();
+						$data['article'][$key]['zip'] = $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%engineering%' and ".$value['sql'])->count() == null ? 0 : $this->tool->img_article->field('mId,uId,typeFile,typeid,projectid,detailsid,title,click')->where("typeFile LIKE '%engineering%' and ".$value['sql'])->count();
+					}
+				}
+			}	
+				
+			// {pid:_this.projectValue, uid:_this.userValue, key:keyValue, lid:_this.labelValue, gid:_this.groupLabelValue, beginTime:_this.timeValue[0], endTime:_this.timeValue[1], state: state}
+			
+			$this->ajaxReturn(['code'=>$this->tool->success,'data'=>$data,'msg'=>'success','status'=>$sql,],'JSON');
 		} else {
 			$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
 		}
@@ -2004,58 +3316,70 @@ class AdminController extends ControllerController {
 			if(I('post.mId') != '') $ini['mId']=I('post.mId');
 			if(I('post.mId') == '') $this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
 			$article = $this->tool->img_article->where($ini)->find();
-			$article['keyword'] =  explode(',',$article['keyword']);
-			$article['img'] = json_decode($article['img']);
-			$article['psd'] = json_decode($article['psd']);
-			$article['video'] = json_decode($article['video']);
-			$article['ai'] = json_decode($article['ai']);
-			$article['pdf'] = json_decode($article['pdf']);
-			$article['word'] = json_decode($article['word']);
-			$article['excel'] = json_decode($article['excel']);
-			$article['engineering'] = json_decode($article['engineering']);
-			$temp2 = [];
-			$project=$this->tool->img_project->where(['webShow' => 0])->select();
-			$types=$this->tool->img_type->where(['webShow' => 0])->select();
-			$details=$this->tool->img_details->where(['webShow' => 0])->select();
-			$users=$this->tool->img_users->where(['webShow' => 0])->select();
-			if(count($project) != 0){
-				$temp = [];
-				for($i=0;$i<count($project);$i++){
-					$temp[$i] = array('neq',$project[$i]['pid']);
-				}
-				$info['projectid'] = $temp;
-			}
-			if(count($types) != 0){
-				$temp = [];
-				for($j=0;$j<count($types);$j++){
-					$temp[$j] = array('neq',$types[$j]['tid']);
-				}
-				$info['typeid'] = $temp;
-			}
-			if(count($details) != 0){
-				$temp = [];
-				for($n=0;$n<count($details);$n++){
-					$temp[$n] = array('neq',$details[$n]['did']);
-				}
-				$info['detailsid'] = $temp;
-			}
-			if(count($users) != 0){
-				$temp = [];
-				for($o=0;$o<count($users);$o++){
-					$temp[$o] = array('neq',$users[$o]['uId']);
-				}
-				$info['uId'] = $temp;
-			}
-			for($o=0;$o<count($article['keyword']);$o++){
-				$temp2[$o]=array("like","%{$article['keyword'][$o]}%");
-			}
-			$info['title|keyword|describe'] = $temp2;
-			$article['xiangguan'] = $this->tool->img_article->where($info)->limit(20)->select();
-			$r = $this->tool->img_article->getLastSql();
 			$article['user'] = $this->tool->img_users->where(['uId' => $article['uId']])->find();
-			$this->tool->img_article->where(['mId' => $article['mId']])->save(['click' => intval($article['click']) + 1 ]);
-			$this->tool->img_browse_web_info->add(['uId' => I('post.uId'), 'sameDay' => date('Y-m-d'), 'mId' => $article['mId'], 'time' => time()]);
-			$this->ajaxReturn(['code'=>$this->tool->success,'data'=>$article,'msg'=>'获取成功','status'=>$r,],'JSON');
+			$seeUser = $this->tool->img_users->where(['uId' => I('post.uId')])->find();
+			$privacyType=$this->tool->img_privacy_type->where(['tid' => $article['detailsid']])->find();
+			if($privacyType){
+				$privacyType['users'] != '' ? $privacyType['users'] = explode(",",$privacyType['users']) : $privacyType = $privacyType;
+				$privacyType['authGroup'] != '' ? $privacyType['authGroup'] = explode(",",$privacyType['authGroup']) : $privacyType = $privacyType;
+			}
+			if(($privacyType && $privacyType['state'] == '1' && array_search($seeUser['uId'],$privacyType['users']) || array_search($seeUser['permissions'],$privacyType['authGroup'])) || $article['user']['uId'] == $seeUser['uId'] || $seeUser['permissions'] == '2' || !$privacyType || ($privacyType && $privacyType['state'] == '2' && $privacyType['users'] == '' && $privacyType['authGroup'] == '')){
+				$article['keyword'] =  explode(',',$article['keyword']);
+				$article['img'] = json_decode($article['img']);
+				$article['psd'] = json_decode($article['psd']);
+				$article['video'] = json_decode($article['video']);
+				$article['ai'] = json_decode($article['ai']);
+				$article['pdf'] = json_decode($article['pdf']);
+				$article['word'] = json_decode($article['word']);
+				$article['excel'] = json_decode($article['excel']);
+				$article['engineering'] = json_decode($article['engineering']);
+				$temp2 = [];
+				$project=$this->tool->img_project->where(['webShow' => 0])->select();
+				$types=$this->tool->img_type->where(['webShow' => 0])->select();
+				$details=$this->tool->img_details->where(['webShow' => 0])->select();
+				$users=$this->tool->img_users->where(['webShow' => 0])->select();
+				if(count($project) != 0){
+					$temp = [];
+					for($i=0;$i<count($project);$i++){
+						$temp[$i] = array('neq',$project[$i]['pid']);
+					}
+					$info['projectid'] = $temp;
+				}
+				if(count($types) != 0){
+					$temp = [];
+					for($j=0;$j<count($types);$j++){
+						$temp[$j] = array('neq',$types[$j]['tid']);
+					}
+					$info['typeid'] = $temp;
+				}
+				if(count($details) != 0){
+					$temp = [];
+					for($n=0;$n<count($details);$n++){
+						$temp[$n] = array('neq',$details[$n]['did']);
+					}
+					$info['detailsid'] = $temp;
+				}
+				if(count($users) != 0){
+					$temp = [];
+					for($o=0;$o<count($users);$o++){
+						$temp[$o] = array('neq',$users[$o]['uId']);
+					}
+					$info['uId'] = $temp;
+				}
+				for($o=0;$o<count($article['keyword']);$o++){
+					$temp2[$o]=array("like","%{$article['keyword'][$o]}%");
+				}
+				$info['title|keyword|describe'] = $temp2;
+				$article['xiangguan'] = $this->tool->img_article->where($info)->limit(20)->select();
+				$r = $this->tool->img_article->getLastSql();
+				
+				$this->tool->img_article->where(['mId' => $article['mId']])->save(['click' => intval($article['click']) + 1 ]);
+				$this->tool->img_browse_web_info->add(['uId' => I('post.uId'), 'sameDay' => date('Y-m-d'), 'mId' => $article['mId'], 'time' => time()]);
+				$this->ajaxReturn(['code'=>$this->tool->success,'data'=>$article,'msg'=>'获取成功','status'=>$r,],'JSON');
+			} else {
+				$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'无权查看当前文章！','status'=>$privacyType,],'JSON');
+			}
+			
 		} else {
 			$this->ajaxReturn(['code'=>$this->tool->params_invalid,'data'=>'','msg'=>'参数错误','status'=>true,],'JSON');
 		}
