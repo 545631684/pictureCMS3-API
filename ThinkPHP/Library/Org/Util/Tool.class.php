@@ -21,6 +21,7 @@ class Tool {
 	public $img_information;
 	public $img_operationinfo;
 	public $img_browse_web_info;
+	public $img_privacy_type;
 	public $src_url;
 	public $time_second;
 	public $time_minute;
@@ -51,6 +52,7 @@ class Tool {
 		$this->img_information = M(C('IMG_INFORMATION'));
 		$this->img_operationinfo = M(C('IMG_OPERATIONINFO'));
 		$this->img_browse_web_info = M(C('IMG_BROWSE_WEB_INFO'));
+		$this->img_privacy_type = M(C('IMG_PRIVACY_TYPE'));
 		// 初始化时间值
 		$this->time_second = C('TIME_SECOND');
 		$this->time_minute = C('TIME_MINUTE');
@@ -196,15 +198,24 @@ class Tool {
 					}
 				}
 				break;
+			case 'privacyType':
+				if (count($data) != 0) {
+					for($i=0;$i<count($data);$i++){
+						$time = $this->img_article->where("detailsid = ".$data[$i]["tid"])->count();
+						$data[$i]["articlelist"] = is_string($time) == false ? "0" : $time;
+					}
+				}
+				break;
 		}
+		count($data) == 0 ? $data = [] : $data = $data;
 		return $data;
 	}
 	
 	/**
 	* 获取当前年份每个月开始和结束时间戳
 	*/
-	function getYearAll() {
-		$nian = date('y');
+	function getYearAll($data) {
+		$nian = date('y',strtotime($data));
 		$temp = [];
 		for ($i=0; $i<=11; $i++) {
 			$obj = new timeObj();
@@ -217,23 +228,80 @@ class Tool {
 	}
 	
 	/**
+	* 获取指定时间内（跨年）的每个月开始和结束时间戳
+	*/
+	function getDiyYearAll($startY,$startM,$endY,$endM) {
+		$difference = $startDifference = $endDifference = 0;
+		$temp = [];
+		if($startY == $endY){
+			$difference = intval($endM)  - intval($startM);
+		} else {
+			$startDifference = 12-intval($startM) == 0 ? 1 : 12-intval($startM);
+			$endDifference = intval($endM);
+		}
+		
+		if($difference != 0){
+			for ($i=0; $i<=$difference; $i++) {
+				$temp[count($temp)] = [
+					'riqi' => $startY.'-'.strval(intval($startM) + $i),
+					'start' => strtotime($startY.'-'.strval(intval($startM) + $i)),
+					'end' => strtotime($startY.'-'.strval(intval($startM) + $i).'-'.$this->is_yue_tian_num($startY,strval(intval($startM) + $i))." 23:59:59"),
+				];
+			}
+		} else if($startDifference != 0 && $endDifference != 0 && $difference == 0){
+			for ($i=0; $i<=$startDifference; $i++) {
+				$temp[count($temp)] = [
+					'riqi' => $startY.'-'.strval(intval($startM) + $i),
+					'start' => strtotime($startY.'-'.strval(intval($startM) + $i)),
+					'end' => strtotime($startY.'-'.strval(intval($startM) + $i).'-'.$this->is_yue_tian_num($startY,strval(intval($startM) + $i))." 23:59:59"),
+					'qq' => $startY.'-'.strval(intval($startM) + $i)." 23:59:59",
+				];
+			}
+			for ($e=0; $e<$endDifference; $e++) {
+				$temp[count($temp)] = [
+					'riqi' => $endY.'-'.strval($e + 1),
+					'start' => strtotime($endY.'-'.strval($e + 1)),
+					'end' => strtotime($endY.'-'.strval($e + 1).'-'.$this->is_yue_tian_num($startY,strval(intval($startM) + 1)." 23:59:59")),
+					'qq' => $endY.'-'.strval($e + 1)." 23:59:59",
+				];
+			}
+		}
+		return $temp;
+	}
+	
+	/**
 	* 获取当前月每天的开始和结束时间戳
 	*/
-	function getMonthAll () {
-		$days = date("t");
+	function getMonthAll ($timeString) {
 		$time = [];
-		for ($i = 0; $i < intval($days); $i++)
-		{
-			# 获取当月每天
-			$day[] = strtotime(date('m/d', strtotime("+" .$i. " day", strtotime(date("Y-m-01")))));
-			# 获取每天开始时间
-			$start = strtotime(date('Y-m-d H:i:s', strtotime("+" . $i . " day", strtotime(date("Y-m-01 00:00:00")))));
-			# 获取每天结束时间
-			$end = strtotime(date('Y-m-d H:i:s', strtotime("+" . $i . " day", strtotime(date("Y-m-01 23:59:59")))));
-			$time[$i]['riqi'] = 1+$i.'日';
-			$time[$i]['start'] = $start;
-			$time[$i]['end'] = $end;
+		if($timeString != ''){
+			$days = date("t",strtotime($timeString));
+			for ($i = 0; $i < intval($days); $i++)
+			{
+				# 获取每天开始时间
+				$start = strtotime($timeString."-".(1+$i)." 00:00:00");
+				# 获取每天结束时间
+				$end = strtotime($timeString."-".(1+$i)." 23:59:59");
+				$time[$i]['riqi'] = $timeString."-".(1+$i);
+				$time[$i]['start'] = $start;
+				$time[$i]['end'] = $end;
+			}
+		} else {
+			$days = date("t");
+			for ($i = 0; $i < intval($days); $i++)
+			{
+				# 获取当月每天
+				$day[] = strtotime(date('m/d', strtotime("+" .$i. " day", strtotime(date("Y-m-01")))));
+				# 获取每天开始时间
+				$start = strtotime(date('Y-m-d H:i:s', strtotime("+" . $i . " day", strtotime(date("Y-m-01 00:00:00")))));
+				# 获取每天结束时间
+				$end = strtotime(date('Y-m-d H:i:s', strtotime("+" . $i . " day", strtotime(date("Y-m-01 23:59:59")))));
+				$time[$i]['riqi'] = 1+$i.'日';
+				$time[$i]['start'] = $start;
+				$time[$i]['end'] = $end;
+			}
 		}
+		
 		return $time;
 	}
 	
@@ -282,7 +350,7 @@ class Tool {
 			if ($type == 'start') {
 				return mktime(0, 0, 0, 3, 1, date('Y'));
 			} else if ($type == 'end') {
-				return mktime(23, 59, 59, 3, $this ->is_yue_tian_num(date('Y'), 1), date('Y'));
+				return mktime(23, 59, 59, 3, $this ->is_yue_tian_num(date('Y'), 3), date('Y'));
 			}
 		}
 
